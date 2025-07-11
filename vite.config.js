@@ -4,10 +4,9 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   assetsInclude: ['**/*.xlsx'],
-  preview: {
-    allowedHosts: ['aede04e8e975.ngrok-free.app']
-  },
+  base: '/',
   build: {
+    outDir: 'dist',
     rollupOptions: {
       output: {
         manualChunks: {
