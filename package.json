@@ -10,17 +10,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "@tailwindcss/postcss": "^4.1.11",
     "@twa-dev/sdk": "^8.0.2",
     "@types/exceljs": "^0.5.3",
     "@types/xlsx": "^0.0.35",
+    "chart.js": "^4.4.3",
     "exceljs": "^4.4.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-window": "^1.8.10",
-    "react-virtuoso": "^4.10.4",
     "react-chartjs-2": "^5.2.0",
-    "chart.js": "^4.4.3"
+    "react-dom": "^19.1.0",
+    "react-virtuoso": "^4.10.4",
+    "react-window": "^1.8.10"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import ExcelJS from 'exceljs';
 import WebApp from '@twa-dev/sdk';
-import Charts from './components/Charts';
-import ErrorBoundary from './components/ErrorBoundary';
+import { Bar, Line } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend } from 'chart.js';
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import './styles.css';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend);
 
 function App() {
   const [data, setData] = useState([]);
   const [projects, setProjects] = useState([]);
   const [periods, setPeriods] = useState([
     '02.06 - 08.06', '09.06 - 15.06', '16.06 - 22.06', 
-    '23.06 - 29.06', '30.06 - 06.07', '07.07 - 13.07'
+    '23.06 - 29.06', '30.06 - 06.07', '07.07 - 13.07', '14.07 - 20.07'
   ]);
   const [selectedProject, setSelectedProject] = useState('');
-  const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [selectedPeriod, setSelectedPeriod] = useState('14.07 - 20.07');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -156,6 +160,15 @@ function App() {
     (!selectedPeriod || row.Период === selectedPeriod)
   );
 
+  const currentPeriodData = data.filter(row => row.Период === '14.07 - 20.07');
+  const totalViews = currentPeriodData.reduce((sum, row) => sum + row.Просмотры, 0);
+  const totalSI = currentPeriodData.reduce((sum, row) => sum + row.СИ, 0);
+  const avgER = currentPeriodData.length > 0 
+    ? (currentPeriodData.reduce((sum, row) => sum + row.ЕР, 0) / currentPeriodData.length * 100).toFixed(2)
+    : 0;
+  const targetViews = 2000000;
+  const viewProgress = Math.min((totalViews / targetViews) * 100, 100);
+
   const exportToCSV = () => {
     const headers = 'Ссылка,Просмотры,СИ,ЕР,Спецпроект,Период\n';
     const csv = filteredData.map(row => 
@@ -170,16 +183,51 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
-  return (
-    <ErrorBoundary>
-      <div className="p-4 max-w-5xl mx-auto glass-container">
-        <h1 className="text-3xl font-bold text-white mb-6 text-center">
-          Дашборд спецпроектов
-        </h1>
+  // Данные для графика просмотров по проектам
+  const projectViewsData = {
+    labels: projects.filter(p => currentPeriodData.some(row => row.Спецпроект === p)),
+    datasets: [{
+      label: 'Просмотры',
+      data: projects.filter(p => currentPeriodData.some(row => row.Спецпроект === p))
+        .map(p => currentPeriodData.filter(row => row.Спецпроект === p)
+          .reduce((sum, row) => sum + row.Просмотры, 0)),
+      backgroundColor: 'rgba(129, 216, 208, 0.7)', // tiffany
+      borderColor: 'rgba(129, 216, 208, 1)',
+      borderWidth: 1
+    }]
+  };
 
-        <div className="mb-6 flex flex-col sm:flex-row gap-4 glass-card">
+  // Данные для графика ЕР по периодам
+  const erByPeriodData = {
+    labels: periods,
+    datasets: [{
+      label: 'Средний ЕР (%)',
+      data: periods.map(period => {
+        const periodData = data.filter(row => row.Период === period);
+        return periodData.length > 0 
+          ? (periodData.reduce((sum, row) => sum + row.ЕР, 0) / periodData.length * 100).toFixed(2)
+          : 0;
+      }),
+      fill: false,
+      borderColor: 'rgba(255, 105, 180, 1)', // pink
+      tension: 0.1
+    }]
+  };
+
+  return (
+    <div className="p-4 max-w-5xl mx-auto glass-container">
+      <button 
+        className="absolute top-4 right-4 glass-button p-2"
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+      >
+        {isSidebarOpen ? <XMarkIcon className="h-6 w-6 text-white" /> : <Bars3Icon className="h-6 w-6 text-white" />}
+      </button>
+
+      <div className={`fixed top-0 right-0 h-full w-64 glass-sidebar transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 ease-in-out z-50`}>
+        <div className="p-4">
+          <h2 className="text-xl font-bold text-white mb-4">Фильтры</h2>
           <select
-            className="p-3 border-none rounded-lg glass-select bg-purple-800 bg-opacity-50 text-white"
+            className="p-3 mb-4 w-full border-none rounded-lg glass-select bg-purple-800 bg-opacity-50 text-white"
             value={selectedProject}
             onChange={(e) => setSelectedProject(e.target.value)}
             aria-label="Выбор спецпроекта"
@@ -190,7 +238,7 @@ function App() {
             ))}
           </select>
           <select
-            className="p-3 border-none rounded-lg glass-select bg-green-800 bg-opacity-50 text-white"
+            className="p-3 mb-4 w-full border-none rounded-lg glass-select bg-green-800 bg-opacity-50 text-white"
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value)}
             aria-label="Выбор периода"
@@ -201,42 +249,120 @@ function App() {
             ))}
           </select>
           <button
+            onClick={() => {
+              setSelectedProject('');
+              setSelectedPeriod('');
+            }}
+            className="p-3 mb-4 w-full rounded-lg glass-button bg-orange-600 hover:bg-orange-700"
+          >
+            Сбросить фильтры
+          </button>
+          <button
             onClick={exportToCSV}
-            className="p-3 rounded-lg glass-button bg-orange-600 hover:bg-orange-700"
+            className="p-3 w-full rounded-lg glass-button bg-orange-600 hover:bg-orange-700"
           >
             Экспорт в CSV
           </button>
         </div>
-
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="spinner glass-spinner border-t-orange-600"></div>
-          </div>
-        ) : error ? (
-          <div className="text-pink-400 text-center">
-            Ошибка: {error}. Попробуйте обновить страницу.
-          </div>
-        ) : (
-          <>
-            <Charts data={filteredData} projects={projects} periods={periods} />
-            {filteredData.length === 0 && (
-              <div className="glass-card p-4 text-center text-white">
-                Нет данных. Попробуйте выбрать другой проект или период, или сбросьте фильтры.
-                <button
-                  onClick={() => {
-                    setSelectedProject('');
-                    setSelectedPeriod('');
-                  }}
-                  className="ml-2 text-orange-400 underline"
-                >
-                  Сбросить фильтры
-                </button>
-              </div>
-            )}
-          </>
-        )}
       </div>
-    </ErrorBoundary>
+
+      <h1 className="text-3xl font-bold text-white mb-6 text-center">
+        Дашборд спецпроектов
+      </h1>
+
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="spinner glass-spinner border-t-orange-600"></div>
+        </div>
+      ) : error ? (
+        <div className="text-pink-400 text-center">
+          Ошибка: {error}. Попробуйте обновить страницу.
+        </div>
+      ) : (
+        <>
+          <div className="mb-8 glass-card p-6">
+            <h2 className="text-2xl font-semibold text-white mb-4">Период: {selectedPeriod || '14.07 - 20.07'}</h2>
+            <div className="mb-4">
+              <div className="text-white mb-2">Просмотры: {totalViews.toLocaleString()} / {targetViews.toLocaleString()}</div>
+              <div className="w-full bg-gray-700 rounded-full h-4">
+                <div 
+                  className="bg-gradient-to-r from-tiffany to-pink h-4 rounded-full transition-all duration-1000" 
+                  style={{ width: `${viewProgress}%` }}
+                ></div>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="glass-card p-4 text-center">
+                <div className="text-2xl font-bold text-tiffany">{totalViews.toLocaleString()}</div>
+                <div className="text-white">Просмотры</div>
+              </div>
+              <div className="glass-card p-4 text-center">
+                <div className="text-2xl font-bold text-tiffany">{avgER}%</div>
+                <div className="text-white">Средний ЕР</div>
+              </div>
+              <div className="glass-card p-4 text-center">
+                <div className="text-2xl font-bold text-tiffany">{totalSI.toLocaleString()}</div>
+                <div className="text-white">СИ</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-8 glass-card p-6">
+            <h3 className="text-xl font-semibold text-white mb-4">Просмотры по проектам (текущий период)</h3>
+            <div style={{ height: '300px' }}>
+              <Bar
+                data={projectViewsData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: { 
+                    legend: { display: false },
+                    tooltip: { enabled: true }
+                  },
+                  scales: {
+                    y: { 
+                      beginAtZero: true,
+                      ticks: { font: { size: 12 } }
+                    },
+                    x: { ticks: { font: { size: 12 } } }
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="glass-card p-6">
+            <h3 className="text-xl font-semibold text-white mb-4">Средний ЕР по периодам</h3>
+            <div style={{ height: '300px' }}>
+              <Line
+                data={erByPeriodData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: { 
+                    legend: { display: false },
+                    tooltip: { enabled: true }
+                  },
+                  scales: {
+                    y: { 
+                      beginAtZero: true,
+                      ticks: { font: { size: 12 } }
+                    },
+                    x: { ticks: { font: { size: 12 } } }
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          {filteredData.length === 0 && (
+            <div className="glass-card p-4 text-center text-white">
+              Нет данных. Попробуйте выбрать другой проект или период, или сбросьте фильтры.
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
 }
 
