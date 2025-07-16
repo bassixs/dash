@@ -2,7 +2,7 @@ import React from 'react';
 import { useExcelData } from './hooks/useExcelData';
 import { useFilteredData } from './hooks/useFilteredData';
 import { useDashboardStore } from '../../shared/store/useDashboardStore';
-import StatCard from './components/StatCard';
+import StatCard from './components/StatCard.jsx';
 import FiltersPanel from './components/FiltersPanel';
 import Loading from './components/Loading';
 import ErrorMessage from './components/Error';
