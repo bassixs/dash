@@ -3,10 +3,15 @@ import ProjectRecord from '../models/ProjectRecord';
 
 const VALID_HEADERS = ['Ссылка', 'Просмотры', 'СИ', 'ЕР'];
 
-export async function parseExcelFromPublic(path = '/спецпроекты.xlsx', periods = []) {
+export async function parseExcelFromPublic(path = '/projects.xlsx', periods = []) {
+  console.log('Attempting to fetch Excel file from:', path);
   const response = await fetch(path);
-  if (!response.ok) throw new Error(`Excel-файл не найден (${response.status})`);
+  if (!response.ok) {
+    console.error('Failed to fetch Excel file:', response.status, response.statusText);
+    throw new Error(`Excel-файл не найден (${response.status})`);
+  }
 
+  console.log('Excel file fetched successfully');
   const buffer = await response.arrayBuffer();
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer);
@@ -58,6 +63,7 @@ export async function parseExcelFromPublic(path = '/спецпроекты.xlsx'
     }
   });
 
+  console.log('Parsed Excel data:', { records: allRecords.length, projects: projects.length });
   return {
     data: allRecords,
     projects
