@@ -9,7 +9,7 @@ const DEFAULT_PERIODS = [
 export function useExcelData() {
   return useQuery({
     queryKey: ['excel-data'],
-    queryFn: () => parseExcelFromPublic('/спецпроекты.xlsx', DEFAULT_PERIODS),
+    queryFn: () => parseExcelFromPublic('/projects.xlsx', DEFAULT_PERIODS),
     staleTime: 1000 * 60 * 60 * 12 // 12 часов
   });
 }
