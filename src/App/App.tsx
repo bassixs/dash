@@ -2,9 +2,12 @@ import React, { useEffect } from 'react';
 import { initTelegramSDK } from '../shared/utils/telegram';
 import DashboardPage from '../features/dashboard';
 
+/**
+ * Главный компонент приложения.
+ */
 function App() {
   useEffect(() => {
-    initTelegramSDK(); // Инициализация Telegram Mini App SDK
+    initTelegramSDK();
   }, []);
 
   return (

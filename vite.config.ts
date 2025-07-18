@@ -14,7 +14,6 @@ export default defineConfig({
       },
     },
     assetsInclude: ['**/*.xlsx'],
-    // Добавьте это, чтобы явно копировать файлы из public
     copyPublicDir: true,
   },
 });

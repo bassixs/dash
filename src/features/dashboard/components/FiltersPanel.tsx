@@ -4,45 +4,64 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useExcelData } from '../hooks/useExcelData';
 import { saveAs } from 'file-saver';
+import { ProjectRecord } from '../../../core/models/ProjectRecord';
 
+interface ExcelData {
+  data: ProjectRecord[];
+  projects: string[];
+}
+
+/**
+ * Компонент панели фильтров для выбора проекта и периода.
+ */
 export default function FiltersPanel() {
   const {
     selectedProject,
     selectedPeriod,
     setSelectedPeriod,
     setSelectedProject,
-    resetFilters
+    resetFilters,
   } = useDashboardStore();
-
   const [open, setOpen] = useState(false);
+  const [exportStatus, setExportStatus] = useState<'success' | 'error' | null>(null);
   const { data } = useExcelData();
 
   if (!data) return null;
 
-  const periods = [...new Set(data.data.map(r => r.period))];
+  const periods = [...new Set(data.data.map((r: ProjectRecord) => r.period))];
   const projects = data.projects;
 
   const exportCSV = () => {
-  const rows = data.data.filter((row) => {
-    const matchProject = selectedProject ? row.project === selectedProject : true;
-    const matchPeriod = selectedPeriod ? row.period === selectedPeriod : true;
-    return matchProject && matchPeriod;
-  });
+    try {
+      const rows = data.data.filter((row) => {
+        const matchProject = selectedProject ? row.project === selectedProject : true;
+        const matchPeriod = selectedPeriod ? row.period === selectedPeriod : true;
+        return matchProject && matchPeriod;
+      });
 
-  if (rows.length === 0) return;
+      if (rows.length === 0) {
+        setExportStatus('error');
+        setTimeout(() => setExportStatus(null), 3000);
+        return;
+      }
 
-  const headers = ['Ссылка', 'Просмотры', 'СИ', 'ЕР', 'Спецпроект', 'Период'];
-  const csvContent = [
-    headers.join(','),
-    ...rows.map((r) =>
-      `"${r.link}",${r.views},${r.si},${(r.er * 100).toFixed(2)},"${r.project}","${r.period}"`
-    ),
-  ].join('\n');
+      const headers = ['Ссылка', 'Просмотры', 'СИ', 'ЕР', 'Спецпроект', 'Период'];
+      const csvContent = [
+        headers.join(','),
+        ...rows.map((r: ProjectRecord) =>
+          `"${r.link}",${r.views},${r.si},${(r.er * 100).toFixed(2)},"${r.project}","${r.period}"`
+        ),
+      ].join('\n');
 
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  saveAs(blob, 'export.csv');
-};
-
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      saveAs(blob, 'export.csv');
+      setExportStatus('success');
+      setTimeout(() => setExportStatus(null), 3000);
+    } catch (err) {
+      setExportStatus('error');
+      setTimeout(() => setExportStatus(null), 3000);
+    }
+  };
 
   return (
     <div className="fixed top-4 right-4 z-50">
@@ -65,6 +84,13 @@ export default function FiltersPanel() {
             className="fixed top-0 right-0 h-full w-80 bg-white dark:bg-gray-900 shadow-xl p-6 overflow-y-auto"
           >
             <h2 className="text-xl font-bold mb-4">Фильтры</h2>
+
+            {exportStatus === 'success' && (
+              <div className="text-green-500 mb-4">Файл успешно экспортирован!</div>
+            )}
+            {exportStatus === 'error' && (
+              <div className="text-red-500 mb-4">Ошибка при экспорте. Данных нет.</div>
+            )}
 
             <div className="mb-4">
               <label className="block mb-1 text-sm text-gray-600 dark:text-gray-300">Спецпроект</label>
@@ -99,7 +125,7 @@ export default function FiltersPanel() {
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded"
                 onClick={() => setOpen(false)}
               >
-                Применить
+                Сохранить
               </button>
               <button
                 className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 p-2 rounded"

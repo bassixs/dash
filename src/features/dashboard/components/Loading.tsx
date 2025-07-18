@@ -1,3 +1,8 @@
+import React from 'react';
+
+/**
+ * Компонент индикатора загрузки.
+ */
 export default function Loading() {
   return (
     <div className="flex justify-center items-center h-64">
