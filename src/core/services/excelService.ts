@@ -1,13 +1,6 @@
 import ExcelJS from 'exceljs';
 import ProjectRecord, { ProjectRecordInterface } from '../models/ProjectRecord';
 
-/**
- * Парсит Excel-файл и возвращает записи и проекты.
- * @param path Путь к файлу
- * @param periods Список периодов
- * @returns Объект с данными и проектами
- * @throws Ошибка при загрузке или парсинге файла
- */
 export async function parseExcelFromPublic(
   path: string = '/спецпроекты.xlsx',
   periods: string[] = []
@@ -32,15 +25,18 @@ export async function parseExcelFromPublic(
     const VALID_HEADERS = ['ссылка', 'просмотры', 'си', 'ер'].map(h => h.toLowerCase());
 
     workbook.eachSheet((sheet) => {
+      console.log(`Processing sheet: ${sheet.name}`);
       const jsonData: any[] = [];
       sheet.eachRow({ includeEmpty: false }, (row) => {
-        // Проверяем, что row.values является массивом
         const values = Array.isArray(row.values) ? row.values.slice(1) : [];
-        if (values.every((val: ExcelJS.CellValue) => val === undefined || val === null)) return; // Пропуск пустых строк
+        if (values.every((val: ExcelJS.CellValue) => val === undefined || val === null)) return;
         jsonData.push(values);
       });
 
-      if (jsonData.length < 1) return;
+      if (jsonData.length < 1) {
+        console.warn(`No data in sheet: ${sheet.name}`);
+        return;
+      }
 
       const header = jsonData[0].map((h: string) => h?.toLowerCase?.() || '');
       if (!VALID_HEADERS.every((h, i) => header[i] === h)) {
@@ -51,7 +47,7 @@ export async function parseExcelFromPublic(
       let currentPeriod = '';
       const records: ProjectRecordInterface[] = [];
 
-      jsonData.slice(1).forEach((row: any[]) => {
+      jsonData.slice(1).forEach((row: any[], rowIndex: number) => {
         const [link, views, si, er] = row;
         if (periods.includes(link)) {
           currentPeriod = link;
@@ -72,6 +68,7 @@ export async function parseExcelFromPublic(
         records.push(record);
       });
 
+      console.log(`Sheet ${sheet.name} records:`, records.length);
       if (records.length > 0) {
         allRecords.push(...records);
         projects.push(sheet.name);
