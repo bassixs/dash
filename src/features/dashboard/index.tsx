@@ -16,31 +16,29 @@ interface ExcelData {
   projects: string[];
 }
 
-/**
- * Главная страница дашборда.
- */
 function DashboardPage() {
+  // Все хуки вызываются в начале
   const { data, isLoading, error } = useExcelData();
   const { selectedPeriod, selectedProject } = useDashboardStore();
   const filtered = useFilteredData(data?.data || []);
-  const periods = [...new Set(data?.data.map((r: ProjectRecordInterface) => r.period) || [])];
+  const periods = useMemo(() => [...new Set(data?.data.map((r: ProjectRecordInterface) => r.period) || [])], [data]);
   const { projectViewsData, erByPeriodData } = useChartData(
     filtered,
     data?.projects || [],
     periods,
     selectedProject
   );
-
-  if (isLoading) return <Loading />;
-  if (error) return <ErrorMessage message={error instanceof Error ? error.message : 'Неизвестная ошибка'} />;
-
-  const currentData = filtered.length > 0 ? filtered : data?.data || [];
+  const currentData = useMemo(() => filtered.length > 0 ? filtered : data?.data || [], [filtered, data]);
   const { totalViews, totalSI, avgER } = useMemo(() => {
     const totalViews = currentData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.views, 0);
     const totalSI = currentData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.si, 0);
-    const avgER = currentData.length ? (currentData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.er, 0) / currentData.length * 100).toFixed(2) : 0;
+    const avgER = currentData.length ? (currentData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.er, 0) / currentData.length * 100).toFixed(2) : '0';
     return { totalViews, totalSI, avgER };
   }, [currentData]);
+
+  // Условный рендеринг после всех хуков
+  if (isLoading) return <Loading />;
+  if (error) return <ErrorMessage message={error instanceof Error ? error.message : 'Неизвестная ошибка'} />;
 
   const viewTarget = 2_000_000;
   const viewProgress = Math.min((totalViews / viewTarget) * 100, 100);
