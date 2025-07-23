@@ -14,7 +14,7 @@ interface ExcelData {
 export function useExcelData() {
   return useQuery<ExcelData, Error>({
     queryKey: ['excelData'],
-    queryFn: () => parseExcelFromPublic('/projects.xlsx'),
+    queryFn: () => parseExcelFromPublic('/спецпроекты.xlsx'),
     staleTime: 1000 * 60 * 60 * 12, // 12 часов
     retry: 2,
   });
