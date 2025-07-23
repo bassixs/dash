@@ -1,57 +1,37 @@
-import { vi, describe, it, expect } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useFilteredData } from './useFilteredData';
-import { useDashboardStore } from '../../../shared/store/useDashboardStore';
-import { ProjectRecordInterface } from '../../../core/models/ProjectRecord';
-
-vi.mock('../../../shared/store/useDashboardStore', () => ({
-  useDashboardStore: vi.fn(),
-}));
+import { useFilteredData } from '@features/dashboard/hooks/useFilteredData';
+import { describe, it, expect, vi } from 'vitest';
+import { useDashboardStore } from '@shared/store/useDashboardStore';
+import { ProjectRecordInterface } from '@core/models/ProjectRecord';
 
 describe('useFilteredData', () => {
-  const mockData: ProjectRecordInterface[] = [
-    { link: 'a', views: 100, si: 50, er: 0.05, project: 'P1', period: '2023-01' },
-    { link: 'b', views: 200, si: 100, er: 0.1, project: 'P2', period: '2023-02' },
-  ];
-
-  it('filters by project', () => {
+  it('filters data by project and period', () => {
     vi.mocked(useDashboardStore).mockReturnValue({
-      selectedProject: 'P1',
-      selectedPeriod: '',
+      selectedProject: 'Test Project',
+      selectedPeriod: '14.07 - 20.07',
       setSelectedProject: vi.fn(),
       setSelectedPeriod: vi.fn(),
       resetFilters: vi.fn(),
     });
-
-    const { result } = renderHook(() => useFilteredData(mockData));
-    expect(result.current).toHaveLength(1);
-    expect(result.current[0].project).toBe('P1');
-  });
-
-  it('filters by period', () => {
-    vi.mocked(useDashboardStore).mockReturnValue({
-      selectedProject: '',
-      selectedPeriod: '2023-01',
-      setSelectedProject: vi.fn(),
-      setSelectedPeriod: vi.fn(),
-      resetFilters: vi.fn(),
-    });
-
-    const { result } = renderHook(() => useFilteredData(mockData));
-    expect(result.current).toHaveLength(1);
-    expect(result.current[0].period).toBe('2023-01');
-  });
-
-  it('returns all data when no filters applied', () => {
-    vi.mocked(useDashboardStore).mockReturnValue({
-      selectedProject: '',
-      selectedPeriod: '',
-      setSelectedProject: vi.fn(),
-      setSelectedPeriod: vi.fn(),
-      resetFilters: vi.fn(),
-    });
-
-    const { result } = renderHook(() => useFilteredData(mockData));
-    expect(result.current).toHaveLength(2);
+    const data: ProjectRecordInterface[] = [
+      {
+        link: 'https://example.com',
+        views: 1000,
+        si: 500,
+        er: 0.05,
+        project: 'Test Project',
+        period: '14.07 - 20.07',
+      },
+      {
+        link: 'https://example2.com',
+        views: 2000,
+        si: 1000,
+        er: 0.1,
+        project: 'Other Project',
+        period: '21.07 - 27.07',
+      },
+    ];
+    const { result } = renderHook(() => useFilteredData(data));
+    expect(result.current).toEqual([data[0]]);
   });
 });

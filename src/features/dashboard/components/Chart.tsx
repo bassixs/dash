@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Bar, Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -10,6 +10,8 @@ import {
   Title,
   Tooltip,
   Legend,
+  ChartData,
+  ChartOptions,
 } from 'chart.js';
 
 ChartJS.register(
@@ -23,27 +25,35 @@ ChartJS.register(
   Legend
 );
 
-type ChartType = 'bar' | 'line';
-
-interface ChartProps {
-  type: ChartType;
-  data: any;
-  options?: any;
+// Интерфейсы для каждого типа графика
+interface BarChartProps {
+  type: 'bar';
+  data: ChartData<'bar'>;
+  options?: ChartOptions<'bar'>;
 }
+
+interface LineChartProps {
+  type: 'line';
+  data: ChartData<'line'>;
+  options?: ChartOptions<'line'>;
+}
+
+// Дискриминированное объединение
+type ChartProps = BarChartProps | LineChartProps;
 
 /**
  * Универсальный компонент для рендеринга графиков.
- * @param type Тип графика ('bar' или 'line')
- * @param data Данные для графика
- * @param options Настройки графика
+ * @param props Пропсы графика: тип, данные и настройки
  */
-export default function Chart({ type, data, options }: ChartProps) {
+export default function Chart(props: ChartProps) {
+  const { type, data, options } = props;
+
   return (
     <div className="h-64">
       {type === 'bar' ? (
-        <Bar data={data} options={options} />
+        <Bar data={data as ChartData<'bar'>} options={options as ChartOptions<'bar'>} />
       ) : (
-        <Line data={data} options={options} />
+        <Line data={data as ChartData<'line'>} options={options as ChartOptions<'line'>} />
       )}
     </div>
   );

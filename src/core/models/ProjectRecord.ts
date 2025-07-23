@@ -15,12 +15,12 @@ export default class ProjectRecord implements ProjectRecordInterface {
   project: string;
   period: string;
 
-  constructor({ link, views, si, er, project, period }: ProjectRecordInterface) {
-    this.link = link ?? '';
-    this.views = views ?? 0;
-    this.si = si ?? 0;
-    this.er = er ?? 0;
-    this.project = project ?? '';
-    this.period = period ?? 'Не указан';
+  constructor(data: ProjectRecordInterface) {
+    this.link = data.link;
+    this.views = data.views;
+    this.si = data.si;
+    this.er = data.er;
+    this.project = data.project;
+    this.period = data.period;
   }
 }

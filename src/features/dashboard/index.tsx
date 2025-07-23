@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useExcelData } from './hooks/useExcelData';
 import { useFilteredData } from './hooks/useFilteredData';
 import { useChartData } from './hooks/useChartData';
@@ -9,10 +9,10 @@ import DataTable from './components/DataTable';
 import Loading from './components/Loading';
 import ErrorMessage from './components/Error';
 import Chart from './components/Chart';
-import { ProjectRecord } from '../../core/models/ProjectRecord';
+import { ProjectRecordInterface } from '@core/models/ProjectRecord';
 
 interface ExcelData {
-  data: ProjectRecord[];
+  data: ProjectRecordInterface[];
   projects: string[];
 }
 
@@ -23,21 +23,25 @@ function DashboardPage() {
   const { data, isLoading, error } = useExcelData();
   const { selectedPeriod, selectedProject } = useDashboardStore();
   const filtered = useFilteredData(data?.data || []);
-  const periods = [...new Set(data?.data.map((r: ProjectRecord) => r.period) || [])];
+  const periods = [...new Set(data?.data.map((r: ProjectRecordInterface) => r.period) || [])];
   const { projectViewsData, erByPeriodData } = useChartData(
-    filtered.length > 0 ? filtered : data?.data.filter((r: ProjectRecord) => r.period === '14.07 - 20.07') || [],
+    filtered,
     data?.projects || [],
     periods,
     selectedProject
   );
 
   if (isLoading) return <Loading />;
-  if (error) return <ErrorMessage message={error.message} />;
+  if (error) return <ErrorMessage message={error instanceof Error ? error.message : 'Неизвестная ошибка'} />;
 
-  const currentData = filtered.length > 0 ? filtered : data?.data.filter((r: ProjectRecord) => r.period === '14.07 - 20.07') || [];
-  const totalViews = currentData.reduce((sum: number, r: ProjectRecord) => sum + r.views, 0);
-  const totalSI = currentData.reduce((sum: number, r: ProjectRecord) => sum + r.si, 0);
-  const avgER = currentData.length ? (currentData.reduce((sum: number, r: ProjectRecord) => sum + r.er, 0) / currentData.length * 100).toFixed(2) : 0;
+  const currentData = filtered.length > 0 ? filtered : data?.data || [];
+  const { totalViews, totalSI, avgER } = useMemo(() => {
+    const totalViews = currentData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.views, 0);
+    const totalSI = currentData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.si, 0);
+    const avgER = currentData.length ? (currentData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.er, 0) / currentData.length * 100).toFixed(2) : 0;
+    return { totalViews, totalSI, avgER };
+  }, [currentData]);
+
   const viewTarget = 2_000_000;
   const viewProgress = Math.min((totalViews / viewTarget) * 100, 100);
 

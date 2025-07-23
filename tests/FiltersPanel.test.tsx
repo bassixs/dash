@@ -1,21 +1,56 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import FiltersPanel from './FiltersPanel';
-import { useDashboardStore } from '../../../shared/store/useDashboardStore';
-import { useExcelData } from '../hooks/useExcelData';
-import { vi } from 'vitest';
+import FiltersPanel from '@features/dashboard/components/FiltersPanel';
+import { useDashboardStore } from '@shared/store/useDashboardStore';
+import { useExcelData } from '@features/dashboard/hooks/useExcelData';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { saveAs } from 'file-saver';
+import { UseQueryResult } from '@tanstack/react-query';
+import { ProjectRecordInterface } from '@core/models/ProjectRecord';
 
-vi.mock('../../../shared/store/useDashboardStore', () => ({
-  useDashboardStore: vi.fn(),
-}));
-vi.mock('../hooks/useExcelData', () => ({
-  useExcelData: vi.fn(),
-}));
-vi.mock('file-saver', () => ({
-  saveAs: vi.fn(),
-}));
+interface ExcelData {
+  data: ProjectRecordInterface[];
+  projects: string[];
+}
+
+vi.mock('file-saver');
 
 describe('FiltersPanel', () => {
   beforeEach(() => {
+    vi.mocked(useExcelData).mockReturnValue({
+      data: {
+        data: [
+          {
+            link: 'https://example.com',
+            views: 1000,
+            si: 500,
+            er: 0.05,
+            project: 'Test Project',
+            period: '14.07 - 20.07',
+          },
+        ],
+        projects: ['Test Project'],
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      isFetching: false,
+      isPending: false,
+      isSuccess: true,
+      isFetched: true,
+      refetch: vi.fn(),
+      status: 'success',
+      isLoadingError: false,
+      isRefetchError: false,
+      isPlaceholderData: false,
+      dataUpdatedAt: 0,
+      errorUpdatedAt: 0,
+      failureCount: 0,
+      failureReason: null,
+      isFetchedAfterMount: true,
+      isPreviousData: false,
+      isStale: false,
+      fetchStatus: 'idle',
+    } as unknown as UseQueryResult<ExcelData, Error>);
     vi.mocked(useDashboardStore).mockReturnValue({
       selectedProject: '',
       selectedPeriod: '',
@@ -23,28 +58,18 @@ describe('FiltersPanel', () => {
       setSelectedPeriod: vi.fn(),
       resetFilters: vi.fn(),
     });
-    vi.mocked(useExcelData).mockReturnValue({
-      data: {
-        data: [
-          { link: 'a', views: 100, si: 50, er: 0.05, project: 'P1', period: '2023-01' },
-        ],
-        projects: ['P1'],
-      },
-    });
   });
 
   it('renders filter panel', () => {
     render(<FiltersPanel />);
-    fireEvent.click(screen.getByLabelText('Фильтры'));
     expect(screen.getByText('Фильтры')).toBeInTheDocument();
     expect(screen.getByText('Все спецпроекты')).toBeInTheDocument();
   });
 
   it('exports CSV on button click', () => {
-    const saveAs = vi.spyOn(require('file-saver'), 'saveAs');
     render(<FiltersPanel />);
-    fireEvent.click(screen.getByLabelText('Фильтры'));
-    fireEvent.click(screen.getByText('Экспорт в CSV'));
+    const exportButton = screen.getByText('Экспорт в CSV');
+    fireEvent.click(exportButton);
     expect(saveAs).toHaveBeenCalled();
     expect(screen.getByText('Файл успешно экспортирован!')).toBeInTheDocument();
   });

@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "baseUrl": "src",
+    "paths": {
+      "@core/*": ["core/*"],
+      "@shared/*": ["shared/*"],
+      "@features/*": ["features/*"]
+    },
+    "target": "ESNext",
+    "module": "ESNext",
+    "strict": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["vitest/globals", "@testing-library/jest-dom"]
+  },
+  "include": ["src/**/*", "tests/**/*", "vitest.d.ts"]
+}

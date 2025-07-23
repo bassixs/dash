@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
@@ -13,7 +14,13 @@ export default defineConfig({
         },
       },
     },
-    assetsInclude: ['**/*.xlsx'],
-    copyPublicDir: true,
+  },
+  assetsInclude: ['**/*.xlsx'],
+  resolve: {
+    alias: {
+      '@core': path.resolve(__dirname, './src/core'),
+      '@shared': path.resolve(__dirname, './src/shared'),
+      '@features': path.resolve(__dirname, './src/features'),
+    },
   },
 });

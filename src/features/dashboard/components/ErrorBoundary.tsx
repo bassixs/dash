@@ -5,6 +5,7 @@ import React, { Component, ReactNode } from 'react';
  */
 interface ErrorBoundaryState {
   hasError: boolean;
+  errorMessage?: string;
 }
 
 interface ErrorBoundaryProps {
@@ -14,8 +15,8 @@ interface ErrorBoundaryProps {
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   state: ErrorBoundaryState = { hasError: false };
 
-  static getDerivedStateFromError(): ErrorBoundaryState {
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, errorMessage: error.message };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
@@ -28,7 +29,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     if (this.state.hasError) {
       return (
         <div className="text-pink-400 text-center p-4">
-          Произошла ошибка при рендеринге. Пожалуйста, обновите страницу.
+          Произошла ошибка: {this.state.errorMessage || 'Неизвестная ошибка'}. Пожалуйста, обновите страницу.
         </div>
       );
     }

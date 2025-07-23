@@ -1,12 +1,16 @@
 import React from 'react';
 import { TableVirtuoso } from 'react-virtuoso';
-import { ProjectRecordInterface } from '../../core/models/ProjectRecord';
+import { ProjectRecordInterface } from '../../../core/models/ProjectRecord';
 
 /**
  * Компонент таблицы для отображения данных.
  * @param data Массив записей
  */
 export default function DataTable({ data }: { data: ProjectRecordInterface[] }) {
+  if (data.length === 0) {
+    return <div className="text-center p-4">Нет данных для отображения</div>;
+  }
+
   return (
     <TableVirtuoso
       data={data}

@@ -4,10 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useExcelData } from '../hooks/useExcelData';
 import { saveAs } from 'file-saver';
-import { ProjectRecord } from '../../../core/models/ProjectRecord';
+import { ProjectRecordInterface } from '../../../core/models/ProjectRecord';
 
 interface ExcelData {
-  data: ProjectRecord[];
+  data: ProjectRecordInterface[];
   projects: string[];
 }
 
@@ -28,7 +28,7 @@ export default function FiltersPanel() {
 
   if (!data) return null;
 
-  const periods = [...new Set(data.data.map((r: ProjectRecord) => r.period))];
+  const periods = [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))];
   const projects = data.projects;
 
   const exportCSV = () => {
@@ -48,7 +48,7 @@ export default function FiltersPanel() {
       const headers = ['Ссылка', 'Просмотры', 'СИ', 'ЕР', 'Спецпроект', 'Период'];
       const csvContent = [
         headers.join(','),
-        ...rows.map((r: ProjectRecord) =>
+        ...rows.map((r: ProjectRecordInterface) =>
           `"${r.link}",${r.views},${r.si},${(r.er * 100).toFixed(2)},"${r.project}","${r.period}"`
         ),
       ].join('\n');
@@ -58,6 +58,7 @@ export default function FiltersPanel() {
       setExportStatus('success');
       setTimeout(() => setExportStatus(null), 3000);
     } catch (err) {
+      console.error('Export CSV error:', err);
       setExportStatus('error');
       setTimeout(() => setExportStatus(null), 3000);
     }
@@ -89,7 +90,7 @@ export default function FiltersPanel() {
               <div className="text-green-500 mb-4">Файл успешно экспортирован!</div>
             )}
             {exportStatus === 'error' && (
-              <div className="text-red-500 mb-4">Ошибка при экспорте. Данных нет.</div>
+              <div className="text-red-500 mb-4">Ошибка при экспорте. Данных нет или произошла ошибка.</div>
             )}
 
             <div className="mb-4">
@@ -98,6 +99,7 @@ export default function FiltersPanel() {
                 className="w-full p-2 border rounded dark:bg-gray-800 dark:text-white"
                 value={selectedProject}
                 onChange={(e) => setSelectedProject(e.target.value)}
+                aria-label="Выберите спецпроект"
               >
                 <option value="">Все спецпроекты</option>
                 {projects.map((project) => (
@@ -112,6 +114,7 @@ export default function FiltersPanel() {
                 className="w-full p-2 border rounded dark:bg-gray-800 dark:text-white"
                 value={selectedPeriod}
                 onChange={(e) => setSelectedPeriod(e.target.value)}
+                aria-label="Выберите период"
               >
                 <option value="">Все периоды</option>
                 {periods.map((period) => (
