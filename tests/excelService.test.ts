@@ -36,7 +36,7 @@ describe('excelService', () => {
       getWorksheet: vi.fn().mockReturnValue(mockWorksheet),
     } as any));
 
-    const result = await parseExcelFromPublic('/projects.xlsx');
+    const result = await parseExcelFromPublic('/спецпроекты.xlsx');
     expect(result.data).toEqual([]);
     expect(result.projects).toEqual([]);
   });

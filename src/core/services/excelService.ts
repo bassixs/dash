@@ -9,7 +9,7 @@ import ProjectRecord, { ProjectRecordInterface } from '../models/ProjectRecord';
  * @throws Ошибка при загрузке или парсинге файла
  */
 export async function parseExcelFromPublic(
-  path: string = '/projects.xlsx',
+  path: string = '/спецпроекты.xlsx',
   periods: string[] = []
 ): Promise<{ data: ProjectRecordInterface[]; projects: string[] }> {
   console.log('Attempting to fetch Excel file from:', path);
