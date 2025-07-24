@@ -12,6 +12,8 @@ export function useFilteredData(data: ProjectRecordInterface[]) {
 
   return useMemo(() => {
     console.log('useFilteredData:', { dataLength: data.length, selectedProject, selectedPeriod });
+    if (!selectedProject && !selectedPeriod) return data;
+
     const filtered = data.filter((row) => {
       const matchProject = selectedProject ? row.project === selectedProject : true;
       const matchPeriod = selectedPeriod ? row.period === selectedPeriod : true;

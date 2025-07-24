@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { useExcelData } from './hooks/useExcelData';
 import { useFilteredData } from './hooks/useFilteredData';
 import { useChartData } from './hooks/useChartData';
@@ -8,8 +8,10 @@ import FiltersPanel from './components/FiltersPanel';
 import DataTable from './components/DataTable';
 import Loading from './components/Loading';
 import ErrorMessage from './components/Error';
-import Chart from './components/Chart';
+import Modal from './components/Modal';
+import ErrorBoundary from './components/ErrorBoundary';
 import { ProjectRecordInterface } from '@core/models/ProjectRecord';
+import { ChartOptions } from 'chart.js';
 
 interface ExcelData {
   data: ProjectRecordInterface[];
@@ -17,7 +19,6 @@ interface ExcelData {
 }
 
 function DashboardPage() {
-  // Загрузка данных
   const { data, isLoading, error } = useExcelData();
   const { selectedPeriod, selectedProject, setSelectedPeriod } = useDashboardStore();
   const filtered = useFilteredData(data?.data || []);
@@ -25,20 +26,51 @@ function DashboardPage() {
     const allPeriods = [...new Set(data?.data.map((r: ProjectRecordInterface) => r.period) || [])];
     return allPeriods.filter((p) => p && p.match(/^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/)).sort();
   }, [data]);
-  const { projectViewsData, erByPeriodData } = useChartData(
+
+  const [modalState, setModalState] = useState<{ isOpen: boolean; metric: 'views' | 'er' | null }>({
+    isOpen: false,
+    metric: null,
+  });
+
+  const chartData = useChartData(
     filtered,
     data?.projects || [],
     periods,
-    selectedProject
+    selectedProject,
+    modalState.metric || 'views'
   );
 
-  // Данные для отображения (либо отфильтрованные, либо все)
+  const chartOptions: ChartOptions<'line'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: modalState.metric === 'views' ? 'Просмотры' : 'ЕР (%)',
+          color: '#FFFFFF',
+        },
+      },
+      x: {
+        title: {
+          display: true,
+          text: 'Периоды',
+          color: '#FFFFFF',
+        },
+      },
+    },
+    plugins: {
+      legend: { labels: { color: '#FFFFFF' } },
+      title: { display: false },
+    },
+  };
+
   const currentData = useMemo(() => {
     console.log('currentData calculation:', { filteredLength: filtered.length, dataLength: data?.data.length });
     return filtered.length > 0 ? filtered : data?.data || [];
   }, [filtered, data]);
 
-  // Установка последнего периода как начального
   useEffect(() => {
     if (periods.length > 0 && !selectedPeriod) {
       console.log('Setting initial period:', periods[periods.length - 1]);
@@ -46,102 +78,61 @@ function DashboardPage() {
     }
   }, [periods, selectedPeriod, setSelectedPeriod]);
 
-  // Данные для прогресс-бара и статистики только для последнего периода
-  const latestPeriod = periods[periods.length - 1] || '14.07 - 20.07';
-  const latestPeriodData = useMemo(() => {
-    const filteredData = data?.data.filter((r: ProjectRecordInterface) => 
-      r.period === latestPeriod && (!selectedProject || r.project === selectedProject)
-    ) || [];
-    console.log('latestPeriodData:', { latestPeriod, count: filteredData.length });
-    return filteredData;
-  }, [data, latestPeriod, selectedProject]);
-
-  // Расчет статистики
   const { totalViews, totalSI, avgER, totalLinks } = useMemo(() => {
-    const totalViews = latestPeriodData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.views, 0);
-    const totalSI = latestPeriodData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.si, 0);
-    const avgER = latestPeriodData.length
-      ? (latestPeriodData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.er, 0) / latestPeriodData.length * 100).toFixed(2)
+    const totalViews = filtered.reduce((sum: number, r: ProjectRecordInterface) => sum + r.views, 0);
+    const totalSI = filtered.reduce((sum: number, r: ProjectRecordInterface) => sum + r.si, 0);
+    const avgER = filtered.length
+      ? (filtered.reduce((sum: number, r: ProjectRecordInterface) => sum + r.er, 0) / filtered.length * 100).toFixed(2)
       : '0';
-    const totalLinks = latestPeriodData.length;
+    const totalLinks = filtered.length;
     return { totalViews, totalSI, avgER, totalLinks };
-  }, [latestPeriodData]);
+  }, [filtered]);
 
-  // Условный рендеринг
   if (isLoading) return <Loading />;
-  if (error) return <ErrorMessage message={error instanceof Error ? error.message : 'Неизвестная ошибка'} />;
+  if (error) return <ErrorMessage message={error instanceof Error ? error.message : 'Не удалось загрузить данные. Попробуйте снова.'} />;
 
   console.log('Rendering DashboardPage:', { periods, currentDataLength: currentData.length, selectedProject, selectedPeriod });
 
-  const viewTarget = 2_000_000;
-  const viewProgress = Math.min((totalViews / viewTarget) * 100, 100);
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      y: { beginAtZero: true, title: { display: true, text: 'Просмотры', color: '#FFFFFF' } },
-      x: { title: { display: true, text: 'Спецпроекты', color: '#FFFFFF' } },
-    },
-    plugins: {
-      legend: { labels: { color: '#FFFFFF' } },
-      title: { display: false },
-    },
-  };
-
-  const lineChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      y: { beginAtZero: true, title: { display: true, text: 'ЕР (%)', color: '#FFFFFF' } },
-      x: { title: { display: true, text: 'Периоды', color: '#FFFFFF' } },
-    },
-    plugins: {
-      legend: { labels: { color: '#FFFFFF' } },
-      title: { display: false },
-    },
-  };
-
   return (
-    <div className="p-4 sm:p-6 relative">
-      <FiltersPanel />
+    <ErrorBoundary>
+      <div className="p-4 sm:p-6 relative">
+        <FiltersPanel />
 
-      <h1 className="text-3xl font-bold mb-6 text-center">Аналитика спецпроектов</h1>
+        <h1 className="text-3xl font-bold mb-6 text-center">Аналитика спецпроектов</h1>
 
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mb-6">
-        <h2 className="text-xl mb-2 font-semibold">Период: {latestPeriod}</h2>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mb-6">
+          <h2 className="text-xl mb-2 font-semibold">Период: {selectedPeriod || periods[periods.length - 1]}</h2>
 
-        <div className="mb-4 text-sm text-gray-600 dark:text-gray-300">
-          Просмотры: {totalViews.toLocaleString()} / {viewTarget.toLocaleString()}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <StatCard
+              label="Просмотры"
+              value={totalViews.toLocaleString()}
+              onClick={() => setModalState({ isOpen: true, metric: 'views' })}
+            />
+            <StatCard
+              label="Средний ЕР"
+              value={`${avgER}%`}
+              onClick={() => setModalState({ isOpen: true, metric: 'er' })}
+            />
+            <StatCard label="СИ" value={totalSI.toLocaleString()} onClick={() => {}} />
+            <StatCard label="Ссылки" value={totalLinks.toLocaleString()} onClick={() => {}} />
+          </div>
         </div>
 
-        <div className="w-full bg-gray-200 h-3 rounded-full mb-4">
-          <div className="h-3 bg-blue-600 rounded-full transition-all duration-700 ease-in-out" style={{ width: `${viewProgress}%` }} />
+        <Modal
+          isOpen={modalState.isOpen}
+          onClose={() => setModalState({ isOpen: false, metric: null })}
+          chartData={chartData}
+          chartOptions={chartOptions}
+          title={modalState.metric === 'views' ? 'Динамика просмотров' : 'Динамика ЕР'}
+        />
+
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+          <h3 className="text-lg font-semibold mb-4">Данные</h3>
+          <DataTable data={currentData} />
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <StatCard label="Просмотры" value={totalViews.toLocaleString()} />
-          <StatCard label="Средний ЕР" value={`${avgER}%`} />
-          <StatCard label="СИ" value={totalSI.toLocaleString()} />
-          <StatCard label="Ссылки" value={totalLinks.toLocaleString()} />
-        </div>
       </div>
-
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mb-6">
-        <h3 className="text-lg font-semibold mb-4">Просмотры по проектам</h3>
-        <Chart type="bar" data={projectViewsData} options={chartOptions} />
-      </div>
-
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mb-6">
-        <h3 className="text-lg font-semibold mb-4">ЕР по периодам</h3>
-        <Chart type="line" data={erByPeriodData} options={lineChartOptions} />
-      </div>
-
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-        <h3 className="text-lg font-semibold mb-4">Данные</h3>
-        <DataTable data={currentData} />
-      </div>
-    </div>
+    </ErrorBoundary>
   );
 }
 

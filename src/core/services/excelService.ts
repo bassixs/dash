@@ -22,13 +22,15 @@ export async function parseExcelFromPublic(
 
     const allRecords: ProjectRecordInterface[] = [];
     const projects: string[] = [];
-    const VALID_HEADERS = ['ссылка', 'просмотры', 'си', 'ер'].map(h => h.toLowerCase());
+    const VALID_HEADERS = ['ссылка', 'просмотры', 'си', 'ер'].map(h => h.toLowerCase().trim());
 
     workbook.eachSheet((sheet) => {
       console.log(`Processing sheet: ${sheet.name}`);
       const jsonData: any[] = [];
-      sheet.eachRow({ includeEmpty: false }, (row) => {
-        const values = Array.isArray(row.values) ? row.values.slice(1) : [];
+      sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+        const values = Array.isArray(row.values)
+          ? row.values.slice(1)
+          : Object.values(row.values || {}).slice(1);
         if (values.every((val: ExcelJS.CellValue) => val === undefined || val === null)) return;
         jsonData.push(values);
       });
@@ -38,7 +40,7 @@ export async function parseExcelFromPublic(
         return;
       }
 
-      const header = jsonData[0].map((h: string) => h?.toLowerCase?.() || '');
+      const header = jsonData[0].map((h: string) => h?.toString().toLowerCase().trim() || '');
       if (!VALID_HEADERS.every((h, i) => header[i] === h)) {
         console.warn('Invalid headers in sheet:', sheet.name, header);
         return;
