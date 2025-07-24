@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDashboardStore } from '../../../shared/store/useDashboardStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
@@ -28,9 +28,19 @@ export default function FiltersPanel() {
 
   if (!data) return null;
 
-  const periods = [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))].filter(
-    (p) => p && p.match(/^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/)
-  ).sort();
+  const periods = [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))]
+    .filter((p) => p && p.match(/^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/))
+    .sort();
+
+  // Устанавливаем последний период как начальный
+  useEffect(() => {
+    if (periods.length > 0 && !selectedPeriod) {
+      console.log('FiltersPanel: Setting initial period:', periods[periods.length - 1]);
+      setSelectedPeriod(periods[periods.length - 1]);
+    }
+  }, [periods, selectedPeriod, setSelectedPeriod]);
+
+  console.log('FiltersPanel:', { periods, selectedProject, selectedPeriod });
 
   const exportCSV = () => {
     try {

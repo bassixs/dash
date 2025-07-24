@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useExcelData } from './hooks/useExcelData';
 import { useFilteredData } from './hooks/useFilteredData';
 import { useChartData } from './hooks/useChartData';
@@ -19,7 +19,7 @@ interface ExcelData {
 function DashboardPage() {
   // Все хуки вызываются в начале
   const { data, isLoading, error } = useExcelData();
-  const { selectedPeriod, selectedProject } = useDashboardStore();
+  const { selectedPeriod, selectedProject, setSelectedPeriod } = useDashboardStore();
   const filtered = useFilteredData(data?.data || []);
   const periods = useMemo(() => {
     const allPeriods = [...new Set(data?.data.map((r: ProjectRecordInterface) => r.period) || [])];
@@ -31,12 +31,25 @@ function DashboardPage() {
     periods,
     selectedProject
   );
-  const currentData = useMemo(() => filtered.length > 0 ? filtered : data?.data || [], [filtered, data]);
+  const currentData = useMemo(() => {
+    console.log('currentData calculation:', { filteredLength: filtered.length, dataLength: data?.data.length });
+    return filtered.length > 0 ? filtered : data?.data || [];
+  }, [filtered, data]);
+
+  // Устанавливаем последний период как начальный
+  useEffect(() => {
+    if (periods.length > 0 && !selectedPeriod) {
+      console.log('Setting initial period:', periods[periods.length - 1]);
+      setSelectedPeriod(periods[periods.length - 1]);
+    }
+  }, [periods, selectedPeriod, setSelectedPeriod]);
 
   // Вычисляем данные для прогресс-бара только для последнего периода
   const latestPeriod = periods[periods.length - 1] || '14.07 - 20.07';
   const latestPeriodData = useMemo(() => {
-    return data?.data.filter((r: ProjectRecordInterface) => r.period === latestPeriod) || [];
+    const filteredData = data?.data.filter((r: ProjectRecordInterface) => r.period === latestPeriod) || [];
+    console.log('latestPeriodData:', { latestPeriod, count: filteredData.length });
+    return filteredData;
   }, [data, latestPeriod]);
   const { totalViews, totalSI, avgER } = useMemo(() => {
     const totalViews = latestPeriodData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.views, 0);
@@ -50,6 +63,8 @@ function DashboardPage() {
   // Условный рендеринг после всех хуков
   if (isLoading) return <Loading />;
   if (error) return <ErrorMessage message={error instanceof Error ? error.message : 'Неизвестная ошибка'} />;
+
+  console.log('Rendering DashboardPage:', { periods, currentDataLength: currentData.length, selectedProject, selectedPeriod });
 
   const viewTarget = 2_000_000;
   const viewProgress = Math.min((totalViews / viewTarget) * 100, 100);

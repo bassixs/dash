@@ -49,8 +49,9 @@ export async function parseExcelFromPublic(
 
       jsonData.slice(1).forEach((row: any[], rowIndex: number) => {
         const [link, views, si, er] = row;
-        if (periods.includes(link)) {
+        if (typeof link === 'string' && link.match(/^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/)) {
           currentPeriod = link;
+          console.log(`Found period in ${sheet.name}: ${currentPeriod}`);
           return;
         }
 
@@ -68,7 +69,7 @@ export async function parseExcelFromPublic(
         records.push(record);
       });
 
-      console.log(`Sheet ${sheet.name} records:`, records.length);
+      console.log(`Sheet ${sheet.name} records:`, records.length, 'periods:', [...new Set(records.map(r => r.period))]);
       if (records.length > 0) {
         allRecords.push(...records);
         projects.push(sheet.name);

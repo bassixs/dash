@@ -11,10 +11,13 @@ export function useFilteredData(data: ProjectRecordInterface[]) {
   const { selectedProject, selectedPeriod } = useDashboardStore();
 
   return useMemo(() => {
-    return data.filter((row) => {
+    console.log('useFilteredData:', { dataLength: data.length, selectedProject, selectedPeriod });
+    const filtered = data.filter((row) => {
       const matchProject = selectedProject ? row.project === selectedProject : true;
       const matchPeriod = selectedPeriod ? row.period === selectedPeriod : true;
       return matchProject && matchPeriod;
     });
+    console.log('Filtered data:', filtered.length);
+    return filtered;
   }, [data, selectedProject, selectedPeriod]);
 }
