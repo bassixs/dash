@@ -17,7 +17,7 @@ interface ExcelData {
 }
 
 function DashboardPage() {
-  // Все хуки вызываются в начале
+  // Загрузка данных
   const { data, isLoading, error } = useExcelData();
   const { selectedPeriod, selectedProject, setSelectedPeriod } = useDashboardStore();
   const filtered = useFilteredData(data?.data || []);
@@ -31,12 +31,14 @@ function DashboardPage() {
     periods,
     selectedProject
   );
+
+  // Данные для отображения (либо отфильтрованные, либо все)
   const currentData = useMemo(() => {
     console.log('currentData calculation:', { filteredLength: filtered.length, dataLength: data?.data.length });
     return filtered.length > 0 ? filtered : data?.data || [];
   }, [filtered, data]);
 
-  // Устанавливаем последний период как начальный
+  // Установка последнего периода как начального
   useEffect(() => {
     if (periods.length > 0 && !selectedPeriod) {
       console.log('Setting initial period:', periods[periods.length - 1]);
@@ -44,23 +46,28 @@ function DashboardPage() {
     }
   }, [periods, selectedPeriod, setSelectedPeriod]);
 
-  // Вычисляем данные для прогресс-бара только для последнего периода
+  // Данные для прогресс-бара и статистики только для последнего периода
   const latestPeriod = periods[periods.length - 1] || '14.07 - 20.07';
   const latestPeriodData = useMemo(() => {
-    const filteredData = data?.data.filter((r: ProjectRecordInterface) => r.period === latestPeriod) || [];
+    const filteredData = data?.data.filter((r: ProjectRecordInterface) => 
+      r.period === latestPeriod && (!selectedProject || r.project === selectedProject)
+    ) || [];
     console.log('latestPeriodData:', { latestPeriod, count: filteredData.length });
     return filteredData;
-  }, [data, latestPeriod]);
-  const { totalViews, totalSI, avgER } = useMemo(() => {
+  }, [data, latestPeriod, selectedProject]);
+
+  // Расчет статистики
+  const { totalViews, totalSI, avgER, totalLinks } = useMemo(() => {
     const totalViews = latestPeriodData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.views, 0);
     const totalSI = latestPeriodData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.si, 0);
     const avgER = latestPeriodData.length
       ? (latestPeriodData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.er, 0) / latestPeriodData.length * 100).toFixed(2)
       : '0';
-    return { totalViews, totalSI, avgER };
+    const totalLinks = latestPeriodData.length;
+    return { totalViews, totalSI, avgER, totalLinks };
   }, [latestPeriodData]);
 
-  // Условный рендеринг после всех хуков
+  // Условный рендеринг
   if (isLoading) return <Loading />;
   if (error) return <ErrorMessage message={error instanceof Error ? error.message : 'Неизвестная ошибка'} />;
 
@@ -112,10 +119,11 @@ function DashboardPage() {
           <div className="h-3 bg-blue-600 rounded-full transition-all duration-700 ease-in-out" style={{ width: `${viewProgress}%` }} />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <StatCard label="Просмотры" value={totalViews.toLocaleString()} />
           <StatCard label="Средний ЕР" value={`${avgER}%`} />
           <StatCard label="СИ" value={totalSI.toLocaleString()} />
+          <StatCard label="Ссылки" value={totalLinks.toLocaleString()} />
         </div>
       </div>
 
