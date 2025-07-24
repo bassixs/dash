@@ -18,8 +18,8 @@ export default function FiltersPanel() {
   const {
     selectedProject,
     selectedPeriod,
-    setSelectedPeriod,
     setSelectedProject,
+    setSelectedPeriod,
     resetFilters,
   } = useDashboardStore();
   const [open, setOpen] = useState(false);
@@ -28,8 +28,9 @@ export default function FiltersPanel() {
 
   if (!data) return null;
 
-  const periods = [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))];
-  const projects = data.projects;
+  const periods = [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))].filter(
+    (p) => p && p.match(/^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/)
+  ).sort();
 
   const exportCSV = () => {
     try {
@@ -97,12 +98,12 @@ export default function FiltersPanel() {
               <label className="block mb-1 text-sm text-gray-600 dark:text-gray-300">Спецпроект</label>
               <select
                 className="w-full p-2 border rounded dark:bg-gray-800 dark:text-white"
-                value={selectedProject}
-                onChange={(e) => setSelectedProject(e.target.value)}
+                value={selectedProject || ''}
+                onChange={(e) => setSelectedProject(e.target.value || '')}
                 aria-label="Выберите спецпроект"
               >
                 <option value="">Все спецпроекты</option>
-                {projects.map((project) => (
+                {data.projects.map((project) => (
                   <option key={project} value={project}>{project}</option>
                 ))}
               </select>
@@ -112,8 +113,8 @@ export default function FiltersPanel() {
               <label className="block mb-1 text-sm text-gray-600 dark:text-gray-300">Период</label>
               <select
                 className="w-full p-2 border rounded dark:bg-gray-800 dark:text-white"
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
+                value={selectedPeriod || ''}
+                onChange={(e) => setSelectedPeriod(e.target.value || '')}
                 aria-label="Выберите период"
               >
                 <option value="">Все периоды</option>

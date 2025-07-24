@@ -21,7 +21,10 @@ function DashboardPage() {
   const { data, isLoading, error } = useExcelData();
   const { selectedPeriod, selectedProject } = useDashboardStore();
   const filtered = useFilteredData(data?.data || []);
-  const periods = useMemo(() => [...new Set(data?.data.map((r: ProjectRecordInterface) => r.period) || [])], [data]);
+  const periods = useMemo(() => {
+    const allPeriods = [...new Set(data?.data.map((r: ProjectRecordInterface) => r.period) || [])];
+    return allPeriods.filter((p) => p && p.match(/^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/)).sort();
+  }, [data]);
   const { projectViewsData, erByPeriodData } = useChartData(
     filtered,
     data?.projects || [],
@@ -29,12 +32,20 @@ function DashboardPage() {
     selectedProject
   );
   const currentData = useMemo(() => filtered.length > 0 ? filtered : data?.data || [], [filtered, data]);
+
+  // Вычисляем данные для прогресс-бара только для последнего периода
+  const latestPeriod = periods[periods.length - 1] || '14.07 - 20.07';
+  const latestPeriodData = useMemo(() => {
+    return data?.data.filter((r: ProjectRecordInterface) => r.period === latestPeriod) || [];
+  }, [data, latestPeriod]);
   const { totalViews, totalSI, avgER } = useMemo(() => {
-    const totalViews = currentData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.views, 0);
-    const totalSI = currentData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.si, 0);
-    const avgER = currentData.length ? (currentData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.er, 0) / currentData.length * 100).toFixed(2) : '0';
+    const totalViews = latestPeriodData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.views, 0);
+    const totalSI = latestPeriodData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.si, 0);
+    const avgER = latestPeriodData.length
+      ? (latestPeriodData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.er, 0) / latestPeriodData.length * 100).toFixed(2)
+      : '0';
     return { totalViews, totalSI, avgER };
-  }, [currentData]);
+  }, [latestPeriodData]);
 
   // Условный рендеринг после всех хуков
   if (isLoading) return <Loading />;
@@ -76,7 +87,7 @@ function DashboardPage() {
       <h1 className="text-3xl font-bold mb-6 text-center">Аналитика спецпроектов</h1>
 
       <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mb-6">
-        <h2 className="text-xl mb-2 font-semibold">Период: {selectedPeriod || '14.07 - 20.07'}</h2>
+        <h2 className="text-xl mb-2 font-semibold">Период: {latestPeriod}</h2>
 
         <div className="mb-4 text-sm text-gray-600 dark:text-gray-300">
           Просмотры: {totalViews.toLocaleString()} / {viewTarget.toLocaleString()}
