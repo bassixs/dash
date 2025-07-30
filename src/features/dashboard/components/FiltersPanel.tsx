@@ -29,13 +29,18 @@ export default function FiltersPanel() {
 
   const periods = [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))]
     .filter((p) => p && p.match(/^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/))
-    .sort();
+    .sort((a, b) => {
+      // Сортируем от прошлого к настоящему
+      const dateA = new Date(a.split(' - ')[0].split('.').reverse().join('-'));
+      const dateB = new Date(b.split(' - ')[0].split('.').reverse().join('-'));
+      return dateA.getTime() - dateB.getTime();
+    });
 
   // Устанавливаем последний период как начальный только если нет выбранного периода
   useEffect(() => {
     if (periods.length > 0 && !selectedPeriod) {
-      console.log('FiltersPanel: Setting initial period:', periods[periods.length - 1]);
-      setSelectedPeriod(periods[periods.length - 1]);
+      console.log('FiltersPanel: No period selected, but not setting default');
+      // Не устанавливаем период автоматически, чтобы "Все периоды" работало
     }
   }, [periods, selectedPeriod, setSelectedPeriod]);
 

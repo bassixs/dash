@@ -3,6 +3,7 @@ import { useExcelData } from './hooks/useExcelData';
 import { useFilteredData } from './hooks/useFilteredData';
 import { useDashboardStore } from '../../shared/store/useDashboardStore';
 import StatCard from './components/StatCard';
+import ProgressBar from './components/ProgressBar';
 import FiltersPanel from './components/FiltersPanel';
 import Loading from './components/Loading';
 import ErrorMessage from './components/Error';
@@ -30,13 +31,13 @@ function DashboardPage() {
 
   useEffect(() => {
     if (periods.length > 0 && !selectedPeriod) {
-      console.log('Setting initial period:', periods[periods.length - 1]);
-      setSelectedPeriod(periods[periods.length - 1]);
+      console.log('DashboardPage: No period selected, but not setting default');
+      // Не устанавливаем период автоматически, чтобы "Все периоды" работало
     }
   }, [periods, selectedPeriod, setSelectedPeriod]);
 
   // Улучшенный расчет статистики
-  const { totalViews, totalSI, avgER, totalLinks, topProjects, erDistribution } = useMemo(() => {
+  const { totalViews, totalSI, avgER, totalLinks, topProjects } = useMemo(() => {
     const totalViews = filtered.reduce((sum: number, r: ProjectRecordInterface) => sum + r.views, 0);
     const totalSI = filtered.reduce((sum: number, r: ProjectRecordInterface) => sum + r.si, 0);
     
@@ -87,26 +88,29 @@ function DashboardPage() {
       .sort((a, b) => b.views - a.views)
       .slice(0, 5);
 
-    // Распределение ЕР
-    const erRanges = {
-      '0-0.1%': 0,
-      '0.1-0.5%': 0,
-      '0.5-1%': 0,
-      '1-2%': 0,
-      '2%+': 0
-    };
-
-    filtered.forEach(record => {
-      const erPercent = record.views > 0 ? (record.si / record.views) * 100 : 0;
-      if (erPercent < 0.1) erRanges['0-0.1%']++;
-      else if (erPercent < 0.5) erRanges['0.1-0.5%']++;
-      else if (erPercent < 1) erRanges['0.5-1%']++;
-      else if (erPercent < 2) erRanges['1-2%']++;
-      else erRanges['2%+']++;
-    });
-
-    return { totalViews, totalSI, avgER, totalLinks, topProjects, erDistribution: erRanges };
+    return { totalViews, totalSI, avgER, totalLinks, topProjects };
   }, [filtered]);
+
+  // Получаем последний период для прогресс бара
+  const lastPeriod = useMemo(() => {
+    if (periods.length === 0) return null;
+    return periods[periods.length - 1];
+  }, [periods]);
+
+  // Рассчитываем прогресс для последнего периода
+  const progressData = useMemo(() => {
+    if (!lastPeriod) return null;
+    
+    const lastPeriodData = data?.data.filter(record => record.period === lastPeriod) || [];
+    const totalViews = lastPeriodData.reduce((sum, record) => sum + record.views, 0);
+    const target = 2000000; // 2 миллиона просмотров
+    
+    return {
+      current: totalViews,
+      target,
+      period: lastPeriod
+    };
+  }, [data, lastPeriod]);
 
   if (isLoading) return <Loading />;
   if (error) return <ErrorMessage message={error instanceof Error ? error.message : 'Не удалось загрузить данные. Попробуйте снова.'} />;
@@ -157,6 +161,18 @@ function DashboardPage() {
           </div>
         </div>
 
+        {/* Прогресс бар для последнего периода */}
+        {progressData && (
+          <div className="mb-4">
+            <ProgressBar 
+              current={progressData.current}
+              target={progressData.target}
+              label="Прогресс просмотров"
+              period={progressData.period}
+            />
+          </div>
+        )}
+
         {/* Топ проектов */}
         {topProjects.length > 0 && (
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 mb-4">
@@ -186,45 +202,6 @@ function DashboardPage() {
             </div>
           </div>
         )}
-
-        {/* Распределение ЕР */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 mb-4">
-          <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Распределение по ЕР</h3>
-          <div className="space-y-2">
-            {Object.entries(erDistribution).map(([range, count]) => (
-              <div key={range} className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-gray-400">{range}</span>
-                <div className="flex items-center">
-                  <div className="w-20 bg-gray-200 dark:bg-gray-600 rounded-full h-2 mr-2">
-                    <div 
-                      className="bg-blue-500 h-2 rounded-full" 
-                      style={{ width: `${(count / totalLinks) * 100}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white w-8 text-right">
-                    {count}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Дополнительная информация */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
-          <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Дополнительная информация</h3>
-          <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-            <p>• Средний ЕР: {avgER}%</p>
-            <p>• Всего записей: {totalLinks}</p>
-            <p>• Обработано проектов: {topProjects.length}</p>
-            {selectedProject && (
-              <p>• Выбран проект: {selectedProject}</p>
-            )}
-            {selectedPeriod && (
-              <p>• Выбран период: {selectedPeriod}</p>
-            )}
-          </div>
-        </div>
       </div>
     </ErrorBoundary>
   );

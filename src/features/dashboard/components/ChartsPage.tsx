@@ -35,7 +35,7 @@ export default function ChartsPage() {
     const totalSI = filteredData.reduce((sum, record) => sum + record.si, 0);
     const avgER = totalViews > 0 ? ((totalSI / totalViews) * 100).toFixed(1) : '0.0';
 
-    return { totalViews, avgER, recordCount: filteredData.length };
+    return { totalViews, totalSI, avgER, recordCount: filteredData.length };
   }, [data, selectedProject, selectedPeriod]);
 
   const chartOptions: ChartOptions<'line'> = {
@@ -116,8 +116,8 @@ export default function ChartsPage() {
             <p className="text-xs text-gray-500 dark:text-gray-400">Просмотры</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.avgER}%</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Средний ЕР</p>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.totalSI.toLocaleString()}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">СИ</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.recordCount}</p>
