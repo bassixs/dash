@@ -9,6 +9,7 @@ import Loading from './components/Loading';
 import ErrorMessage from './components/Error';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ProjectRecordInterface } from '@core/models/ProjectRecord';
+import { sortPeriods, isValidPeriod, getLastPeriod } from '@shared/utils/periodUtils';
 
 interface ExcelData {
   data: ProjectRecordInterface[];
@@ -19,9 +20,10 @@ function DashboardPage() {
   const { data, isLoading, error } = useExcelData();
   const { selectedPeriod, selectedProject, setSelectedPeriod } = useDashboardStore();
   const filtered = useFilteredData(data?.data || []);
+  
   const periods = useMemo(() => {
     const allPeriods = [...new Set(data?.data.map((r: ProjectRecordInterface) => r.period) || [])];
-    return allPeriods.filter((p) => p && p.match(/^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/)).sort();
+    return sortPeriods(allPeriods.filter(isValidPeriod));
   }, [data]);
 
   const currentData = useMemo(() => {
@@ -92,10 +94,7 @@ function DashboardPage() {
   }, [filtered]);
 
   // Получаем последний период для прогресс бара
-  const lastPeriod = useMemo(() => {
-    if (periods.length === 0) return null;
-    return periods[periods.length - 1];
-  }, [periods]);
+  const lastPeriod = getLastPeriod(periods);
 
   // Рассчитываем прогресс для последнего периода
   const progressData = useMemo(() => {
@@ -115,7 +114,7 @@ function DashboardPage() {
   if (isLoading) return <Loading />;
   if (error) return <ErrorMessage message={error instanceof Error ? error.message : 'Не удалось загрузить данные. Попробуйте снова.'} />;
 
-  console.log('Rendering DashboardPage:', { periods, currentDataLength: currentData.length, selectedProject, selectedPeriod });
+  console.log('Rendering DashboardPage:', { periods, currentDataLength: currentData.length, selectedProject, selectedPeriod, lastPeriod });
 
   return (
     <ErrorBoundary>

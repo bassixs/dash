@@ -1,40 +1,26 @@
 import React, { useState, useEffect } from 'react';
+import { useExcelData } from '../hooks/useExcelData';
 import { useDashboardStore } from '../../../shared/store/useDashboardStore';
 import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { useExcelData } from '../hooks/useExcelData';
-import { saveAs } from 'file-saver';
-import { ProjectRecordInterface } from '../../../core/models/ProjectRecord';
-
-interface ExcelData {
-  data: ProjectRecordInterface[];
-  projects: string[];
-}
+import { ProjectRecordInterface } from '@core/models/ProjectRecord';
+import { sortPeriods, isValidPeriod } from '@shared/utils/periodUtils';
 
 /**
- * Компонент панели фильтров для выбора проекта и периода.
+ * Компонент панели фильтров для дашборда
  */
 export default function FiltersPanel() {
-  const {
-    selectedProject,
-    selectedPeriod,
-    setSelectedProject,
-    setSelectedPeriod,
-    resetFilters,
-  } = useDashboardStore();
-  const [open, setOpen] = useState(false);
-  const [exportStatus, setExportStatus] = useState<'success' | 'error' | null>(null);
   const { data } = useExcelData();
+  const { selectedProject, selectedPeriod, setSelectedProject, setSelectedPeriod, resetFilters } = useDashboardStore();
+  const [open, setOpen] = useState(false);
 
   if (!data) return null;
 
-  const periods = [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))]
-    .filter((p) => p && p.match(/^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/))
-    .sort((a, b) => {
-      // Сортируем от прошлого к настоящему
-      const dateA = new Date(a.split(' - ')[0].split('.').reverse().join('-'));
-      const dateB = new Date(b.split(' - ')[0].split('.').reverse().join('-'));
-      return dateA.getTime() - dateB.getTime();
-    });
+  const projects = [...new Set(data.data.map((r: ProjectRecordInterface) => r.project))].sort();
+  
+  const periods = sortPeriods(
+    [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))]
+      .filter(isValidPeriod)
+  );
 
   // Устанавливаем последний период как начальный только если нет выбранного периода
   useEffect(() => {
@@ -43,41 +29,6 @@ export default function FiltersPanel() {
       // Не устанавливаем период автоматически, чтобы "Все периоды" работало
     }
   }, [periods, selectedPeriod, setSelectedPeriod]);
-
-  console.log('FiltersPanel:', { periods, selectedProject, selectedPeriod });
-
-  const exportCSV = () => {
-    try {
-      const rows = data.data.filter((row) => {
-        const matchProject = selectedProject ? row.project === selectedProject : true;
-        const matchPeriod = selectedPeriod ? row.period === selectedPeriod : true;
-        return matchProject && matchPeriod;
-      });
-
-      if (rows.length === 0) {
-        setExportStatus('error');
-        setTimeout(() => setExportStatus(null), 3000);
-        return;
-      }
-
-      const headers = ['Ссылка', 'Просмотры', 'СИ', 'ЕР', 'Спецпроект', 'Период'];
-      const csvContent = [
-        headers.join(','),
-        ...rows.map((r: ProjectRecordInterface) =>
-          `"${r.link}",${r.views},${r.si},${(r.er * 100).toFixed(2)},"${r.project}","${r.period}"`
-        ),
-      ].join('\n');
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      saveAs(blob, 'export.csv');
-      setExportStatus('success');
-      setTimeout(() => setExportStatus(null), 3000);
-    } catch (err) {
-      console.error('Export CSV error:', err);
-      setExportStatus('error');
-      setTimeout(() => setExportStatus(null), 3000);
-    }
-  };
 
   return (
     <div className="fixed top-4 right-4 z-50">
@@ -93,13 +44,6 @@ export default function FiltersPanel() {
         <div className="fixed top-0 right-0 h-full w-80 bg-white dark:bg-gray-900 shadow-xl p-6 overflow-y-auto animate-slideIn">
           <h2 className="text-xl font-bold mb-4">Фильтры</h2>
 
-          {exportStatus === 'success' && (
-            <div className="text-green-500 mb-4">Файл успешно экспортирован!</div>
-          )}
-          {exportStatus === 'error' && (
-            <div className="text-red-500 mb-4">Ошибка при экспорте. Данных нет или произошла ошибка.</div>
-          )}
-
           <div className="mb-4">
             <label className="block mb-1 text-sm text-gray-600 dark:text-gray-300">Спецпроект</label>
             <select
@@ -109,7 +53,7 @@ export default function FiltersPanel() {
               aria-label="Выберите спецпроект"
             >
               <option value="">Все спецпроекты</option>
-              {data.projects.map((project) => (
+              {projects.map((project) => (
                 <option key={project} value={project}>{project}</option>
               ))}
             </select>
@@ -147,13 +91,6 @@ export default function FiltersPanel() {
               Сбросить
             </button>
           </div>
-
-          <button
-            onClick={exportCSV}
-            className="w-full mt-4 p-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-          >
-            Экспорт в CSV
-          </button>
         </div>
       )}
     </div>
