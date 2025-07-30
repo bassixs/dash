@@ -104,12 +104,20 @@ function DashboardPage() {
     const totalViews = lastPeriodData.reduce((sum, record) => sum + record.views, 0);
     const target = 2000000; // 2 миллиона просмотров
     
+    console.log('Progress Bar Debug:', {
+      lastPeriod,
+      allPeriods: periods,
+      lastPeriodDataLength: lastPeriodData.length,
+      totalViews,
+      target
+    });
+    
     return {
       current: totalViews,
       target,
       period: lastPeriod
     };
-  }, [data, lastPeriod]);
+  }, [data, lastPeriod, periods]);
 
   if (isLoading) return <Loading />;
   if (error) return <ErrorMessage message={error instanceof Error ? error.message : 'Не удалось загрузить данные. Попробуйте снова.'} />;

@@ -22,6 +22,13 @@ export default function FiltersPanel() {
       .filter(isValidPeriod)
   );
 
+  console.log('FiltersPanel Debug:', {
+    allPeriods: [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))],
+    filteredPeriods: [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))].filter(isValidPeriod),
+    sortedPeriods: periods,
+    selectedPeriod
+  });
+
   // Устанавливаем последний период как начальный только если нет выбранного периода
   useEffect(() => {
     if (periods.length > 0 && !selectedPeriod) {
