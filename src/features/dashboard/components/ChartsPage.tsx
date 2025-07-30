@@ -33,7 +33,7 @@ export default function ChartsPage() {
 
     const totalViews = filteredData.reduce((sum, record) => sum + record.views, 0);
     const avgER = filteredData.length
-      ? (filteredData.reduce((sum, record) => sum + record.er, 0) / filteredData.length).toFixed(1)
+      ? (filteredData.reduce((sum, record) => sum + record.er, 0) / filteredData.length * 100).toFixed(1)
       : '0.0';
 
     return { totalViews, avgER, recordCount: filteredData.length };
@@ -42,6 +42,11 @@ export default function ChartsPage() {
   const chartOptions: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false // Убираем легенду
+      }
+    },
     scales: {
       y: { 
         beginAtZero: true, 
@@ -59,11 +64,32 @@ export default function ChartsPage() {
         title: { display: true, text: 'Периоды', color: '#FFFFFF' } 
       },
     },
-    plugins: { 
-      legend: { 
-        labels: { color: '#FFFFFF' } 
-      } 
+  };
+
+  // Настройки для doughnut диаграмм
+  const doughnutOptions: ChartOptions<'doughnut'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false // Убираем легенду
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return `${context.label}: ${context.parsed}`;
+          }
+        }
+      }
     },
+    scales: {
+      x: {
+        display: false // Убираем ось X
+      },
+      y: {
+        display: false // Убираем ось Y
+      }
+    }
   };
 
   if (isLoading) return <Loading />;
@@ -106,8 +132,8 @@ export default function ChartsPage() {
         {shouldShowProjectsChart && (
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
             <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Распределение просмотров по спецпроектам</h3>
-            <div className="h-64">
-              <Chart type="doughnut" data={projectsViewsChartData} />
+            <div className="h-80">
+              <Chart type="doughnut" data={projectsViewsChartData} options={doughnutOptions} />
             </div>
           </div>
         )}
@@ -116,8 +142,8 @@ export default function ChartsPage() {
         {shouldShowProjectsChart && (
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
             <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Средний ЕР по спецпроектам</h3>
-            <div className="h-64">
-              <Chart type="doughnut" data={projectsERChartData} />
+            <div className="h-80">
+              <Chart type="doughnut" data={projectsERChartData} options={doughnutOptions} />
             </div>
           </div>
         )}
@@ -125,8 +151,8 @@ export default function ChartsPage() {
         {/* Диаграмма распределения по ЕР */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
           <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Распределение по ЕР</h3>
-          <div className="h-64">
-            <Chart type="doughnut" data={erChartData} />
+          <div className="h-80">
+            <Chart type="doughnut" data={erChartData} options={doughnutOptions} />
           </div>
         </div>
 
@@ -139,7 +165,7 @@ export default function ChartsPage() {
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
               Период: {selectedPeriod}
             </p>
-            <div className="h-64">
+            <div className="h-80">
               <Chart 
                 type="line" 
                 data={weeklyChartData} 
@@ -148,19 +174,6 @@ export default function ChartsPage() {
             </div>
           </div>
         )}
-
-        {/* Информация о данных */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
-          <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Информация о данных</h3>
-          <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-            <p>• Всего проектов: {projectsViewsChartData.labels?.length || 0}</p>
-            <p>• Обработано записей: {stats.recordCount}</p>
-            {selectedProject && <p>• Выбран проект: {selectedProject}</p>}
-            {selectedPeriod && <p>• Выбран период: {selectedPeriod}</p>}
-            {!selectedProject && <p>• Показаны все проекты</p>}
-            {!selectedPeriod && <p>• Показаны все периоды</p>}
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -40,10 +40,23 @@ function DashboardPage() {
     const totalViews = filtered.reduce((sum: number, r: ProjectRecordInterface) => sum + r.views, 0);
     const totalSI = filtered.reduce((sum: number, r: ProjectRecordInterface) => sum + r.si, 0);
     
+    // Отладочная информация для ЕР
+    console.log('ER Debug:', {
+      filteredLength: filtered.length,
+      sampleER: filtered.slice(0, 5).map(r => ({ er: r.er, project: r.project })),
+      allER: filtered.map(r => r.er)
+    });
+    
     // Исправленный расчет ЕР - ЕР уже в процентах (0.002 = 0.2%)
     const avgER = filtered.length
-      ? (filtered.reduce((sum: number, r: ProjectRecordInterface) => sum + r.er, 0) / filtered.length).toFixed(1)
+      ? (filtered.reduce((sum: number, r: ProjectRecordInterface) => sum + r.er, 0) / filtered.length * 100).toFixed(1)
       : '0.0';
+    
+    console.log('ER Calculation:', {
+      totalER: filtered.reduce((sum: number, r: ProjectRecordInterface) => sum + r.er, 0),
+      avgER,
+      filteredLength: filtered.length
+    });
     
     const totalLinks = filtered.length;
 
@@ -62,7 +75,7 @@ function DashboardPage() {
       .map(([project, stats]) => ({
         project,
         views: stats.views,
-        avgER: (stats.er.reduce((sum, er) => sum + er, 0) / stats.er.length).toFixed(1),
+        avgER: (stats.er.reduce((sum, er) => sum + er, 0) / stats.er.length * 100).toFixed(1),
         count: stats.count
       }))
       .sort((a, b) => b.views - a.views)
@@ -78,11 +91,11 @@ function DashboardPage() {
     };
 
     filtered.forEach(record => {
-      const erPercent = record.er * 100;
-      if (erPercent < 0.1) erRanges['0-0.1%']++;
-      else if (erPercent < 0.5) erRanges['0.1-0.5%']++;
-      else if (erPercent < 1) erRanges['0.5-1%']++;
-      else if (erPercent < 2) erRanges['1-2%']++;
+      const erPercent = record.er; // ЕР уже в правильном формате (0.002 = 0.2%)
+      if (erPercent < 0.001) erRanges['0-0.1%']++;
+      else if (erPercent < 0.005) erRanges['0.1-0.5%']++;
+      else if (erPercent < 0.01) erRanges['0.5-1%']++;
+      else if (erPercent < 0.02) erRanges['1-2%']++;
       else erRanges['2%+']++;
     });
 

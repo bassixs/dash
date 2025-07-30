@@ -35,8 +35,8 @@ export function useProjectsChartData(
 
     const projects = Object.keys(projectData);
     const colors = [
-      '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
-      '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+      '#FF6384', '#36A2EB', '#4BC0C0', '#9966FF', 
+      '#FF9F40', '#FF6384', '#C9CBCF', '#FF6384'
     ];
 
     return {
@@ -132,12 +132,11 @@ export function useERChartData(
 
     // Группируем по диапазонам ЕР
     const erRanges = {
-      '0-1%': { min: 0, max: 0.01, count: 0, totalER: 0 },
+      '0-0.1%': { min: 0, max: 0.001, count: 0, totalER: 0 },
+      '0.1-0.5%': { min: 0.001, max: 0.005, count: 0, totalER: 0 },
+      '0.5-1%': { min: 0.005, max: 0.01, count: 0, totalER: 0 },
       '1-2%': { min: 0.01, max: 0.02, count: 0, totalER: 0 },
-      '2-3%': { min: 0.02, max: 0.03, count: 0, totalER: 0 },
-      '3-4%': { min: 0.03, max: 0.04, count: 0, totalER: 0 },
-      '4-5%': { min: 0.04, max: 0.05, count: 0, totalER: 0 },
-      '5%+': { min: 0.05, max: 1, count: 0, totalER: 0 },
+      '2%+': { min: 0.02, max: 1, count: 0, totalER: 0 },
     };
 
     filteredData.forEach(record => {
@@ -151,7 +150,7 @@ export function useERChartData(
     });
 
     const ranges = Object.keys(erRanges);
-    const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+    const colors = ['#FF6384', '#36A2EB', '#4BC0C0', '#9966FF', '#FF9F40'];
 
     return {
       labels: ranges,

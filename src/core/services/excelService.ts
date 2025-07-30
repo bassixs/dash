@@ -59,6 +59,19 @@ export async function parseExcelFromPublic(
 
         if (!link) return;
 
+        // Отладочная информация для ЕР
+        if (rowIndex < 5) { // Показываем первые 5 записей для отладки
+          console.log(`ER Debug - Row ${rowIndex + 1}:`, {
+            link,
+            views,
+            si,
+            er,
+            erType: typeof er,
+            erNumber: Number(er),
+            isFinite: Number.isFinite(Number(er))
+          });
+        }
+
         const record = new ProjectRecord({
           link: typeof link === 'string' ? link : '',
           views: Number.isFinite(Number(views)) ? Number(views) : 0,

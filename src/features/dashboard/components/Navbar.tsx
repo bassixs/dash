@@ -20,7 +20,7 @@ const navItems: NavItem[] = [
 export default function Navbar(): React.JSX.Element {
   return (
     <nav 
-      className="fixed bottom-0 left-0 right-0 bg-orange-300 rounded-t-2xl shadow-lg flex justify-around items-center h-[78px] max-w-[400px] mx-auto"
+      className="fixed bottom-0 left-0 right-0 bg-blue-600 rounded-t-2xl shadow-lg flex justify-around items-center h-[78px] max-w-[400px] mx-auto"
       role="navigation"
       aria-label="Основная навигация"
     >
@@ -29,8 +29,8 @@ export default function Navbar(): React.JSX.Element {
           key={item.path}
           to={item.path}
           className={({ isActive }) =>
-            `flex flex-col items-center p-2 text-gray-800 transition-colors duration-200 ${
-              isActive ? 'text-blue-600' : 'hover:text-blue-400'
+            `flex flex-col items-center p-2 text-white transition-colors duration-200 ${
+              isActive ? 'text-blue-200' : 'hover:text-blue-200'
             }`
           }
           aria-label={item.label}
