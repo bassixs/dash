@@ -25,7 +25,6 @@ export default defineConfig({
           'vendor-react': ['react', 'react-dom'],
           'vendor-chartjs': ['chart.js', 'react-chartjs-2'],
           'vendor-exceljs': ['exceljs'],
-          'vendor-framer': ['framer-motion'],
           'vendor-zustand': ['zustand'],
           'vendor-twa': ['@twa-dev/sdk'],
         },
