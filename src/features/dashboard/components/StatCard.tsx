@@ -5,17 +5,19 @@ import React from 'react';
  * @param label - Название метрики
  * @param value - Значение метрики
  * @param onClick - Обработчик клика для открытия модального окна
+ * @param className - Дополнительные CSS классы
  */
 interface StatCardProps {
   label: string;
   value: string;
   onClick: () => void;
+  className?: string;
 }
 
-export default function StatCard({ label, value, onClick }: StatCardProps) {
+export default function StatCard({ label, value, onClick, className = '' }: StatCardProps) {
   return (
     <div
-      className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow text-center cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+      className={`bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow text-center cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition ${className}`}
       onClick={onClick}
     >
       <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{value}</div>

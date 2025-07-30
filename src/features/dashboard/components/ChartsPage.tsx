@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useExcelData } from '@features/dashboard/hooks/useExcelData';
 import { useProjectsChartData, useERChartData, useWeeklyChartData } from '@features/dashboard/hooks/useChartData';
 import { useDashboardStore } from '@shared/store/useDashboardStore';
@@ -7,6 +7,7 @@ import FiltersPanel from '@features/dashboard/components/FiltersPanel';
 import Loading from '@features/dashboard/components/Loading';
 import ErrorMessage from '@features/dashboard/components/Error';
 import { ChartOptions } from 'chart.js';
+import { ProjectRecordInterface } from '@core/models/ProjectRecord';
 
 export default function ChartsPage() {
   const { data, isLoading, error } = useExcelData();
@@ -21,6 +22,22 @@ export default function ChartsPage() {
   // Определяем, какой тип графика показывать
   const shouldShowWeeklyChart = selectedProject && selectedPeriod;
   const shouldShowProjectsChart = !selectedProject || !selectedPeriod;
+
+  // Дополнительная статистика для мобильного отображения
+  const stats = useMemo(() => {
+    const filteredData = data?.data.filter(record => {
+      const matchProject = selectedProject ? record.project === selectedProject : true;
+      const matchPeriod = selectedPeriod ? record.period === selectedPeriod : true;
+      return matchProject && matchPeriod;
+    }) || [];
+
+    const totalViews = filteredData.reduce((sum, record) => sum + record.views, 0);
+    const avgER = filteredData.length
+      ? (filteredData.reduce((sum, record) => sum + record.er, 0) / filteredData.length).toFixed(1)
+      : '0.0';
+
+    return { totalViews, avgER, recordCount: filteredData.length };
+  }, [data, selectedProject, selectedPeriod]);
 
   const chartOptions: ChartOptions<'line'> = {
     responsive: true,
@@ -53,46 +70,97 @@ export default function ChartsPage() {
   if (error) return <ErrorMessage message={error instanceof Error ? error.message : 'Неизвестная ошибка'} />;
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="p-4 pb-20">
       <FiltersPanel />
-      <h1 className="text-3xl font-bold mb-6 text-center">Графики и диаграммы</h1>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Заголовок */}
+      <div className="text-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Графики и диаграммы</h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          {selectedPeriod || 'Все периоды'}
+          {selectedProject && ` • ${selectedProject}`}
+        </p>
+      </div>
+
+      {/* Статистика */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 mb-4">
+        <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Общая статистика</h3>
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.totalViews.toLocaleString()}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Просмотры</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.avgER}%</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Средний ЕР</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.recordCount}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Записей</p>
+          </div>
+        </div>
+      </div>
+      
+      <div className="space-y-4">
         {/* Диаграмма просмотров по проектам */}
         {shouldShowProjectsChart && (
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-            <h3 className="text-lg font-semibold mb-4">Распределение просмотров по спецпроектам</h3>
-            <Chart type="doughnut" data={projectsViewsChartData} />
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
+            <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Распределение просмотров по спецпроектам</h3>
+            <div className="h-64">
+              <Chart type="doughnut" data={projectsViewsChartData} />
+            </div>
           </div>
         )}
 
         {/* Диаграмма ЕР по проектам */}
         {shouldShowProjectsChart && (
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-            <h3 className="text-lg font-semibold mb-4">Средний ЕР по спецпроектам</h3>
-            <Chart type="doughnut" data={projectsERChartData} />
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
+            <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Средний ЕР по спецпроектам</h3>
+            <div className="h-64">
+              <Chart type="doughnut" data={projectsERChartData} />
+            </div>
           </div>
         )}
 
         {/* Диаграмма распределения по ЕР */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-          <h3 className="text-lg font-semibold mb-4">Распределение по ЕР</h3>
-          <Chart type="doughnut" data={erChartData} />
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
+          <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Распределение по ЕР</h3>
+          <div className="h-64">
+            <Chart type="doughnut" data={erChartData} />
+          </div>
         </div>
 
         {/* График по дням недели */}
         {shouldShowWeeklyChart && (
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow lg:col-span-2">
-            <h3 className="text-lg font-semibold mb-4">
-              Динамика просмотров и ЕР для {selectedProject} за период {selectedPeriod}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
+            <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">
+              Динамика для {selectedProject}
             </h3>
-            <Chart 
-              type="line" 
-              data={weeklyChartData} 
-              options={chartOptions}
-            />
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              Период: {selectedPeriod}
+            </p>
+            <div className="h-64">
+              <Chart 
+                type="line" 
+                data={weeklyChartData} 
+                options={chartOptions}
+              />
+            </div>
           </div>
         )}
+
+        {/* Информация о данных */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
+          <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Информация о данных</h3>
+          <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+            <p>• Всего проектов: {projectsViewsChartData.labels?.length || 0}</p>
+            <p>• Обработано записей: {stats.recordCount}</p>
+            {selectedProject && <p>• Выбран проект: {selectedProject}</p>}
+            {selectedPeriod && <p>• Выбран период: {selectedPeriod}</p>}
+            {!selectedProject && <p>• Показаны все проекты</p>}
+            {!selectedPeriod && <p>• Показаны все периоды</p>}
+          </div>
+        </div>
       </div>
     </div>
   );
