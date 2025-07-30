@@ -21,17 +21,17 @@ export function useProjectsChartData(
       if (!acc[record.project]) {
         acc[record.project] = {
           views: 0,
-          er: [],
+          si: 0,
           count: 0
         };
       }
 
       acc[record.project].views += record.views;
-      acc[record.project].er.push(record.er);
+      acc[record.project].si += record.si;
       acc[record.project].count += 1;
 
       return acc;
-    }, {} as Record<string, { views: number; er: number[]; count: number }>);
+    }, {} as Record<string, { views: number; si: number; count: number }>);
 
     const projects = Object.keys(projectData);
     const colors = [
@@ -46,9 +46,10 @@ export function useProjectsChartData(
           if (metric === 'views') {
             return projectData[project].views;
           } else {
-            // Средний ЕР для проекта
-            const avgER = projectData[project].er.reduce((sum, er) => sum + er, 0) / projectData[project].er.length;
-            return parseFloat((avgER * 100).toFixed(2));
+            // Средний ЕР для проекта - используем формулу СИ/просмотры * 100
+            const totalViews = projectData[project].views;
+            const totalSI = projectData[project].si;
+            return totalViews > 0 ? parseFloat(((totalSI / totalViews) * 100).toFixed(2)) : 0;
           }
         }),
         backgroundColor: projects.map((_, index) => colors[index % colors.length]),
@@ -80,12 +81,12 @@ export function useWeeklyChartData(
     const dailyData = filteredData.reduce((acc, record, index) => {
       const day = `День ${Math.floor(index / 10) + 1}`; // Упрощенная группировка
       if (!acc[day]) {
-        acc[day] = { views: 0, er: [] };
+        acc[day] = { views: 0, si: 0 };
       }
       acc[day].views += record.views;
-      acc[day].er.push(record.er);
+      acc[day].si += record.si;
       return acc;
-    }, {} as Record<string, { views: number; er: number[] }>);
+    }, {} as Record<string, { views: number; si: number }>);
 
     const days = Object.keys(dailyData);
 
@@ -103,8 +104,9 @@ export function useWeeklyChartData(
         {
           label: 'Средний ЕР (%)',
           data: days.map(day => {
-            const avgER = dailyData[day].er.reduce((sum, er) => sum + er, 0) / dailyData[day].er.length;
-            return parseFloat((avgER * 100).toFixed(2));
+            const views = dailyData[day].views;
+            const si = dailyData[day].si;
+            return views > 0 ? parseFloat(((si / views) * 100).toFixed(2)) : 0;
           }),
           borderColor: '#3b82f6',
           backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -132,21 +134,20 @@ export function useERChartData(
 
     // Группируем по диапазонам ЕР
     const erRanges = {
-      '0-0.1%': { min: 0, max: 0.001, count: 0, totalER: 0 },
-      '0.1-0.5%': { min: 0.001, max: 0.005, count: 0, totalER: 0 },
-      '0.5-1%': { min: 0.005, max: 0.01, count: 0, totalER: 0 },
-      '1-2%': { min: 0.01, max: 0.02, count: 0, totalER: 0 },
-      '2%+': { min: 0.02, max: 1, count: 0, totalER: 0 },
+      '0-0.1%': 0,
+      '0.1-0.5%': 0,
+      '0.5-1%': 0,
+      '1-2%': 0,
+      '2%+': 0,
     };
 
     filteredData.forEach(record => {
-      for (const [range, config] of Object.entries(erRanges)) {
-        if (record.er >= config.min && record.er < config.max) {
-          config.count++;
-          config.totalER += record.er;
-          break;
-        }
-      }
+      const erPercent = record.views > 0 ? (record.si / record.views) * 100 : 0;
+      if (erPercent < 0.1) erRanges['0-0.1%']++;
+      else if (erPercent < 0.5) erRanges['0.1-0.5%']++;
+      else if (erPercent < 1) erRanges['0.5-1%']++;
+      else if (erPercent < 2) erRanges['1-2%']++;
+      else erRanges['2%+']++;
     });
 
     const ranges = Object.keys(erRanges);
@@ -155,7 +156,7 @@ export function useERChartData(
     return {
       labels: ranges,
       datasets: [{
-        data: ranges.map(range => erRanges[range as keyof typeof erRanges].count),
+        data: ranges.map(range => erRanges[range as keyof typeof erRanges]),
         backgroundColor: colors,
         borderColor: colors,
         borderWidth: 2,

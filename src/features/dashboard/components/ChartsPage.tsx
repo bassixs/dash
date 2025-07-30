@@ -32,9 +32,8 @@ export default function ChartsPage() {
     }) || [];
 
     const totalViews = filteredData.reduce((sum, record) => sum + record.views, 0);
-    const avgER = filteredData.length
-      ? (filteredData.reduce((sum, record) => sum + record.er, 0) / filteredData.length * 100).toFixed(1)
-      : '0.0';
+    const totalSI = filteredData.reduce((sum, record) => sum + record.si, 0);
+    const avgER = totalViews > 0 ? ((totalSI / totalViews) * 100).toFixed(1) : '0.0';
 
     return { totalViews, avgER, recordCount: filteredData.length };
   }, [data, selectedProject, selectedPeriod]);

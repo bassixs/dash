@@ -43,17 +43,23 @@ function DashboardPage() {
     // Отладочная информация для ЕР
     console.log('ER Debug:', {
       filteredLength: filtered.length,
-      sampleER: filtered.slice(0, 5).map(r => ({ er: r.er, project: r.project })),
+      sampleER: filtered.slice(0, 5).map(r => ({ 
+        er: r.er, 
+        calculatedER: (r.si / r.views) * 100,
+        project: r.project,
+        views: r.views,
+        si: r.si
+      })),
       allER: filtered.map(r => r.er)
     });
     
-    // Исправленный расчет ЕР - ЕР уже в процентах (0.002 = 0.2%)
+    // Исправленный расчет ЕР - используем формулу СИ/просмотры * 100
     const avgER = filtered.length
-      ? (filtered.reduce((sum: number, r: ProjectRecordInterface) => sum + r.er, 0) / filtered.length * 100).toFixed(1)
+      ? (filtered.reduce((sum: number, r: ProjectRecordInterface) => sum + (r.si / r.views) * 100, 0) / filtered.length).toFixed(1)
       : '0.0';
     
     console.log('ER Calculation:', {
-      totalER: filtered.reduce((sum: number, r: ProjectRecordInterface) => sum + r.er, 0),
+      totalER: filtered.reduce((sum: number, r: ProjectRecordInterface) => sum + (r.si / r.views) * 100, 0),
       avgER,
       filteredLength: filtered.length
     });
@@ -63,19 +69,19 @@ function DashboardPage() {
     // Топ проектов по просмотрам
     const projectStats = filtered.reduce((acc, record) => {
       if (!acc[record.project]) {
-        acc[record.project] = { views: 0, er: [], count: 0 };
+        acc[record.project] = { views: 0, si: 0, count: 0 };
       }
       acc[record.project].views += record.views;
-      acc[record.project].er.push(record.er);
+      acc[record.project].si += record.si;
       acc[record.project].count += 1;
       return acc;
-    }, {} as Record<string, { views: number; er: number[]; count: number }>);
+    }, {} as Record<string, { views: number; si: number; count: number }>);
 
     const topProjects = Object.entries(projectStats)
       .map(([project, stats]) => ({
         project,
         views: stats.views,
-        avgER: (stats.er.reduce((sum, er) => sum + er, 0) / stats.er.length * 100).toFixed(1),
+        avgER: stats.views > 0 ? ((stats.si / stats.views) * 100).toFixed(1) : '0.0',
         count: stats.count
       }))
       .sort((a, b) => b.views - a.views)
@@ -91,11 +97,11 @@ function DashboardPage() {
     };
 
     filtered.forEach(record => {
-      const erPercent = record.er; // ЕР уже в правильном формате (0.002 = 0.2%)
-      if (erPercent < 0.001) erRanges['0-0.1%']++;
-      else if (erPercent < 0.005) erRanges['0.1-0.5%']++;
-      else if (erPercent < 0.01) erRanges['0.5-1%']++;
-      else if (erPercent < 0.02) erRanges['1-2%']++;
+      const erPercent = record.views > 0 ? (record.si / record.views) * 100 : 0;
+      if (erPercent < 0.1) erRanges['0-0.1%']++;
+      else if (erPercent < 0.5) erRanges['0.1-0.5%']++;
+      else if (erPercent < 1) erRanges['0.5-1%']++;
+      else if (erPercent < 2) erRanges['1-2%']++;
       else erRanges['2%+']++;
     });
 
