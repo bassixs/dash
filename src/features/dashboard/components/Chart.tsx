@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bar, Line } from 'react-chartjs-2';
+import { Bar, Line, Pie, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,6 +12,7 @@ import {
   Legend,
   ChartData,
   ChartOptions,
+  ArcElement,
 } from 'chart.js';
 
 ChartJS.register(
@@ -22,7 +23,8 @@ ChartJS.register(
   PointElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ArcElement
 );
 
 interface BarChartProps {
@@ -37,10 +39,22 @@ interface LineChartProps {
   options?: ChartOptions<'line'>;
 }
 
-type ChartProps = BarChartProps | LineChartProps;
+interface PieChartProps {
+  type: 'pie';
+  data: ChartData<'pie'>;
+  options?: ChartOptions<'pie'>;
+}
+
+interface DoughnutChartProps {
+  type: 'doughnut';
+  data: ChartData<'doughnut'>;
+  options?: ChartOptions<'doughnut'>;
+}
+
+type ChartProps = BarChartProps | LineChartProps | PieChartProps | DoughnutChartProps;
 
 /**
- * Универсальный компонент для рендеринга графиков.
+ * Универсальный компонент для рендеринга графиков и диаграмм.
  * @param props Пропсы графика: тип, данные и настройки
  */
 export default function Chart(props: ChartProps) {
@@ -83,10 +97,17 @@ export default function Chart(props: ChartProps) {
 
   return (
     <div className="h-64">
-      {type === 'bar' ? (
+      {type === 'bar' && (
         <Bar data={data as ChartData<'bar'>} options={defaultOptions as ChartOptions<'bar'>} />
-      ) : (
+      )}
+      {type === 'line' && (
         <Line data={data as ChartData<'line'>} options={defaultOptions as ChartOptions<'line'>} />
+      )}
+      {type === 'pie' && (
+        <Pie data={data as ChartData<'pie'>} options={defaultOptions as ChartOptions<'pie'>} />
+      )}
+      {type === 'doughnut' && (
+        <Doughnut data={data as ChartData<'doughnut'>} options={defaultOptions as ChartOptions<'doughnut'>} />
       )}
     </div>
   );

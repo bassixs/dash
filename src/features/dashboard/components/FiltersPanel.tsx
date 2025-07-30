@@ -31,7 +31,7 @@ export default function FiltersPanel() {
     .filter((p) => p && p.match(/^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/))
     .sort();
 
-  // Устанавливаем последний период как начальный
+  // Устанавливаем последний период как начальный только если нет выбранного периода
   useEffect(() => {
     if (periods.length > 0 && !selectedPeriod) {
       console.log('FiltersPanel: Setting initial period:', periods[periods.length - 1]);
