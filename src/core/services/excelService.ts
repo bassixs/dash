@@ -22,7 +22,7 @@ export async function parseExcelFromPublic(
 
     const allRecords: ProjectRecordInterface[] = [];
     const projects: string[] = [];
-    const VALID_HEADERS = ['ссылка', 'просмотры', 'си', 'ер'].map(h => h.toLowerCase().trim());
+    const VALID_HEADERS = ['период', 'ссылка', 'просмотры', 'си', 'ер'].map(h => h.toLowerCase().trim());
 
     workbook.eachSheet((sheet) => {
       console.log(`Processing sheet: ${sheet.name}`);
@@ -41,41 +41,47 @@ export async function parseExcelFromPublic(
       }
 
       const header = jsonData[0].map((h: string) => h?.toString().toLowerCase().trim() || '');
+      console.log(`Sheet ${sheet.name} headers:`, header);
+      
       if (!VALID_HEADERS.every((h, i) => header[i] === h)) {
         console.warn('Invalid headers in sheet:', sheet.name, header);
         return;
       }
 
-      let currentPeriod = '';
       const records: ProjectRecordInterface[] = [];
       const periodsInSheet: string[] = [];
 
       console.log(`Processing ${jsonData.length} rows in sheet: ${sheet.name}`);
 
       jsonData.slice(1).forEach((row: any[], rowIndex: number) => {
-        const [link, views, si, er] = row;
+        const [period, link, views, si, er] = row;
         
-        // Проверяем, является ли строка периодом
-        if (typeof link === 'string' && link.match(/^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/)) {
-          currentPeriod = link.trim();
-          periodsInSheet.push(currentPeriod);
-          console.log(`Found period in ${sheet.name} row ${rowIndex + 1}: "${currentPeriod}"`);
+        // Проверяем, что период валидный
+        if (!period || typeof period !== 'string' || !period.match(/^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/)) {
+          console.warn(`Invalid period in row ${rowIndex + 1}: "${period}"`);
           return;
         }
 
-        if (!link) return;
+        // Проверяем, что есть ссылка
+        if (!link) {
+          console.warn(`No link in row ${rowIndex + 1}`);
+          return;
+        }
 
-        // Отладочная информация для ЕР
-        if (rowIndex < 5) { // Показываем первые 5 записей для отладки
-          console.log(`ER Debug - Row ${rowIndex + 1}:`, {
+        const trimmedPeriod = period.trim();
+        periodsInSheet.push(trimmedPeriod);
+
+        // Отладочная информация для первых 5 записей
+        if (rowIndex < 5) {
+          console.log(`Row ${rowIndex + 1} debug:`, {
+            period: trimmedPeriod,
             link,
             views,
             si,
             er,
             erType: typeof er,
             erNumber: Number(er),
-            isFinite: Number.isFinite(Number(er)),
-            currentPeriod
+            isFinite: Number.isFinite(Number(er))
           });
         }
 
@@ -85,7 +91,7 @@ export async function parseExcelFromPublic(
           si: Number.isFinite(Number(si)) ? Number(si) : 0,
           er: Number.isFinite(Number(er)) ? Number(er) : 0,
           project: sheet.name,
-          period: currentPeriod,
+          period: trimmedPeriod,
         });
 
         records.push(record);
