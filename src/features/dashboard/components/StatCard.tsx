@@ -1,27 +1,29 @@
 import React from 'react';
 
-/**
- * Компонент карточки для отображения статистических данных.
- * @param label - Название метрики
- * @param value - Значение метрики
- * @param onClick - Обработчик клика для открытия модального окна
- * @param className - Дополнительные CSS классы
- */
 interface StatCardProps {
   label: string;
   value: string;
-  onClick: () => void;
+  onClick?: () => void;
   className?: string;
 }
 
+/**
+ * Компонент для отображения статистической карточки
+ */
 export default function StatCard({ label, value, onClick, className = '' }: StatCardProps) {
   return (
-    <div
-      className={`bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow text-center cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition ${className}`}
+    <div 
+      className={`stat-card card-hover ${className} ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
-      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{value}</div>
-      <div className="text-gray-600 dark:text-gray-300 text-sm">{label}</div>
+      <div className="text-center">
+        <p className="text-2xl font-bold text-gray-900 dark:text-white animate-fadeIn">
+          {value}
+        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          {label}
+        </p>
+      </div>
     </div>
   );
 }

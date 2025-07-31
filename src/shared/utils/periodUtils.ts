@@ -3,7 +3,7 @@
  */
 
 /**
- * Сортирует периоды в обратном хронологическом порядке (последние сверху)
+ * Сортирует периоды в хронологическом порядке от прошлого к настоящему
  * @param periods - массив периодов в формате "DD.MM - DD.MM"
  * @returns отсортированный массив периодов
  */
@@ -29,19 +29,19 @@ export function sortPeriods(periods: string[]): string[] {
     const dateA = getStartDate(a);
     const dateB = getStartDate(b);
     
-    // Сортируем в обратном порядке - последние сверху
-    return dateB.getTime() - dateA.getTime();
+    // Сортируем от прошлого к настоящему
+    return dateA.getTime() - dateB.getTime();
   });
 }
 
 /**
- * Получает первый период из отсортированного массива (самый последний по времени)
+ * Получает последний период из отсортированного массива (самый последний по времени)
  * @param periods - массив периодов
  * @returns последний период или null
  */
 export function getLastPeriod(periods: string[]): string | null {
   if (periods.length === 0) return null;
-  return periods[0]; // Теперь первый элемент - это последний период
+  return periods[periods.length - 1]; // Последний элемент - это самый новый период
 }
 
 /**
@@ -50,5 +50,5 @@ export function getLastPeriod(periods: string[]): string | null {
  * @returns true если период валиден
  */
 export function isValidPeriod(period: string): boolean {
-  return period && period.match(/^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/) !== null;
+  return Boolean(period && period.match(/^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/));
 } 

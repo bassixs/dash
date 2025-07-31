@@ -56,34 +56,245 @@ body {
   animation: slideIn 0.3s ease-out;
 }
 
-/* Мобильная адаптация */
-@media (max-width: 640px) {
-  h1 {
-    font-size: 1.5rem;
+/* Кастомные анимации */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
-  .grid-cols-3 {
-    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
   }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
 
-  .rounded-xl {
-    border-radius: 0.5rem;
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
   }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
 
-  .w-80 {
-    width: 90vw !important;
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
   }
+  50% {
+    opacity: 0.5;
+  }
+}
 
-  .text-xl {
-    font-size: 1.125rem;
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
   }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
 
-  .p-6 {
-    padding: 1.5rem;
-  }
+/* Применение анимаций */
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
 
-  table {
-    font-size: 0.875rem;
+.animate-scaleIn {
+  animation: scaleIn 0.2s ease-out;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Skeleton loading */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Улучшенные hover эффекты */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Плавные переходы */
+.transition-all {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Улучшенные кнопки */
+.btn-primary {
+  @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 hover:shadow-lg active:scale-95;
+}
+
+.btn-secondary {
+  @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-all duration-200 hover:shadow-md active:scale-95;
+}
+
+/* Улучшенные карточки */
+.card {
+  @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 dark:border-gray-700;
+}
+
+.card-hover {
+  @apply hover:shadow-lg hover:-translate-y-1 transition-all duration-200;
+}
+
+/* Улучшенные инпуты */
+.input {
+  @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white;
+}
+
+/* Улучшенные селекты */
+.select {
+  @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white;
+}
+
+/* Прогресс бар анимации */
+.progress-bar {
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Улучшенная навигация */
+.nav-item {
+  @apply flex flex-col items-center p-2 text-white transition-all duration-200 relative;
+}
+
+.nav-item:hover {
+  @apply text-blue-200 transform scale-105;
+}
+
+.nav-item.active {
+  @apply text-blue-200;
+}
+
+/* Индикатор активного экрана */
+.nav-indicator {
+  @apply absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-white rounded-full transition-all duration-300;
+}
+
+/* Улучшенные модальные окна */
+.modal-overlay {
+  @apply fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300;
+}
+
+.modal-content {
+  @apply bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-md mx-auto mt-20 transform transition-all duration-300;
+}
+
+/* Улучшенные уведомления */
+.notification {
+  @apply fixed top-4 right-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 border-l-4 border-green-500 animate-fadeIn;
+}
+
+/* Улучшенные таблицы */
+.table {
+  @apply w-full border-collapse;
+}
+
+.table th {
+  @apply bg-gray-50 dark:bg-gray-700 text-left p-3 font-medium text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600;
+}
+
+.table td {
+  @apply p-3 border-b border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300;
+}
+
+.table tr:hover {
+  @apply bg-gray-50 dark:bg-gray-700 transition-colors duration-150;
+}
+
+/* Темная тема улучшения */
+@media (prefers-color-scheme: dark) {
+  .card {
+    @apply bg-gray-800 border-gray-700;
   }
+  
+  .input, .select {
+    @apply bg-gray-700 border-gray-600 text-white;
+  }
+}
+
+/* Мобильные улучшения */
+@media (max-width: 768px) {
+  .card {
+    @apply rounded-lg;
+  }
+  
+  .btn-primary, .btn-secondary {
+    @apply py-3 px-6 text-base;
+  }
+  
+  .nav-item {
+    @apply p-3;
+  }
+}
+
+/* Анимации для графиков */
+.chart-container {
+  @apply animate-fadeIn;
+}
+
+/* Улучшенные фильтры */
+.filter-panel {
+  @apply bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 animate-slideIn;
+}
+
+/* Улучшенные статистические карточки */
+.stat-card {
+  @apply bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 dark:border-gray-700;
+}
+
+.stat-card:hover {
+  @apply transform -translate-y-1 shadow-lg;
+}
+
+/* Улучшенные иконки */
+.icon {
+  @apply transition-all duration-200;
+}
+
+.icon:hover {
+  @apply transform scale-110;
+}
+
+/* Улучшенные загрузочные состояния */
+.loading-spinner {
+  @apply animate-spin rounded-full border-4 border-gray-200 border-t-blue-600;
+}
+
+/* Улучшенные ошибки */
+.error-message {
+  @apply bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg animate-fadeIn;
+}
+
+/* Улучшенные успешные сообщения */
+.success-message {
+  @apply bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-4 py-3 rounded-lg animate-fadeIn;
 }
 

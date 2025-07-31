@@ -41,20 +41,22 @@ export default function FiltersPanel() {
     <div className="fixed top-4 right-4 z-50">
       <button
         onClick={() => setOpen(!open)}
-        className="p-2 bg-blue-600 text-white rounded-full shadow hover:bg-blue-700 transition"
+        className="btn-primary p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
         aria-label="Фильтры"
       >
         {open ? <XMarkIcon className="w-6 h-6" /> : <FunnelIcon className="w-6 h-6" />}
       </button>
 
       {open && (
-        <div className="fixed top-0 right-0 h-full w-80 bg-white dark:bg-gray-900 shadow-xl p-6 overflow-y-auto animate-slideIn">
-          <h2 className="text-xl font-bold mb-4">Фильтры</h2>
+        <div className="fixed top-0 right-0 h-full w-80 bg-white dark:bg-gray-900 shadow-2xl p-6 overflow-y-auto animate-slideIn">
+          <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">Фильтры</h2>
 
-          <div className="mb-4">
-            <label className="block mb-1 text-sm text-gray-600 dark:text-gray-300">Спецпроект</label>
+          <div className="mb-6">
+            <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+              Спецпроект
+            </label>
             <select
-              className="w-full p-2 border rounded dark:bg-gray-800 dark:text-white"
+              className="select"
               value={selectedProject || ''}
               onChange={(e) => setSelectedProject(e.target.value || '')}
               aria-label="Выберите спецпроект"
@@ -66,10 +68,12 @@ export default function FiltersPanel() {
             </select>
           </div>
 
-          <div className="mb-6">
-            <label className="block mb-1 text-sm text-gray-600 dark:text-gray-300">Период</label>
+          <div className="mb-8">
+            <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+              Период
+            </label>
             <select
-              className="w-full p-2 border rounded dark:bg-gray-800 dark:text-white"
+              className="select"
               value={selectedPeriod || ''}
               onChange={(e) => setSelectedPeriod(e.target.value || '')}
               aria-label="Выберите период"
@@ -83,13 +87,13 @@ export default function FiltersPanel() {
 
           <div className="flex gap-4">
             <button
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded"
+              className="btn-primary flex-1"
               onClick={() => setOpen(false)}
             >
               Сохранить
             </button>
             <button
-              className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 p-2 rounded"
+              className="btn-secondary flex-1"
               onClick={() => {
                 resetFilters();
                 setOpen(false);
