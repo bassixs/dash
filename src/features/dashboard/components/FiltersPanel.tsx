@@ -3,7 +3,7 @@ import { useExcelData } from '../hooks/useExcelData';
 import { useDashboardStore } from '../../../shared/store/useDashboardStore';
 import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { ProjectRecordInterface } from '@core/models/ProjectRecord';
-import { sortPeriods, isValidPeriod } from '@shared/utils/periodUtils';
+import { sortPeriods, isValidPeriod, getPeriodsForDisplay } from '@shared/utils/periodUtils';
 
 /**
  * Компонент панели фильтров для дашборда
@@ -17,28 +17,32 @@ export default function FiltersPanel() {
 
   const projects = [...new Set(data.data.map((r: ProjectRecordInterface) => r.project))].sort();
   
-  const periods = sortPeriods(
+  const sortedPeriods = sortPeriods(
     [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))]
       .filter(isValidPeriod)
   );
+  
+  // Получаем периоды в обратном порядке для отображения (последние сверху)
+  const displayPeriods = getPeriodsForDisplay(sortedPeriods);
 
   console.log('FiltersPanel Debug:', {
     allPeriods: [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))],
     filteredPeriods: [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))].filter(isValidPeriod),
-    sortedPeriods: periods,
+    sortedPeriods: sortedPeriods,
+    displayPeriods: displayPeriods,
     selectedPeriod,
-    periodsLength: periods.length,
-    firstPeriod: periods[0],
-    lastPeriod: periods[periods.length - 1]
+    periodsLength: sortedPeriods.length,
+    firstPeriod: sortedPeriods[0],
+    lastPeriod: sortedPeriods[sortedPeriods.length - 1]
   });
 
   // Устанавливаем последний период как начальный только если нет выбранного периода
   useEffect(() => {
-    if (periods.length > 0 && !selectedPeriod) {
+    if (sortedPeriods.length > 0 && !selectedPeriod) {
       console.log('FiltersPanel: No period selected, but not setting default');
       // Не устанавливаем период автоматически, чтобы "Все периоды" работало
     }
-  }, [periods, selectedPeriod, setSelectedPeriod]);
+  }, [sortedPeriods, selectedPeriod, setSelectedPeriod]);
 
   return (
     <div className="fixed top-4 right-4 z-50">
@@ -82,7 +86,7 @@ export default function FiltersPanel() {
               aria-label="Выберите период"
             >
               <option value="">Все периоды</option>
-              {periods.map((period) => (
+              {displayPeriods.map((period) => (
                 <option key={period} value={period}>{period}</option>
               ))}
             </select>
