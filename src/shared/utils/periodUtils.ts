@@ -29,6 +29,15 @@ export function sortPeriods(periods: string[]): string[] {
     const dateA = getStartDate(a);
     const dateB = getStartDate(b);
     
+    // Отладочная информация
+    console.log('Period sorting debug:', {
+      periodA: a,
+      periodB: b,
+      dateA: dateA.toISOString(),
+      dateB: dateB.toISOString(),
+      comparison: dateA.getTime() - dateB.getTime()
+    });
+    
     // Сортируем от прошлого к настоящему
     return dateA.getTime() - dateB.getTime();
   });

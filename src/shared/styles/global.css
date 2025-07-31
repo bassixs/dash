@@ -298,3 +298,37 @@ body {
   @apply bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-4 py-3 rounded-lg animate-fadeIn;
 }
 
+/* Анимации для прогресс бара */
+.progress-bar-container {
+  @apply animate-fadeIn;
+}
+
+.progress-bar-fill {
+  @apply transition-all duration-1000 ease-out;
+}
+
+.progress-bar-glow {
+  animation: progressGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes progressGlow {
+  0% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+
+.progress-dots {
+  @apply transition-all duration-300;
+}
+
+.progress-dot {
+  @apply transition-all duration-500;
+}
+
+.progress-dot.active {
+  @apply scale-125;
+}
+
