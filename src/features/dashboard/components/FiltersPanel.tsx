@@ -26,7 +26,10 @@ export default function FiltersPanel() {
     allPeriods: [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))],
     filteredPeriods: [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))].filter(isValidPeriod),
     sortedPeriods: periods,
-    selectedPeriod
+    selectedPeriod,
+    periodsLength: periods.length,
+    firstPeriod: periods[0],
+    lastPeriod: periods[periods.length - 1]
   });
 
   // Устанавливаем последний период как начальный только если нет выбранного периода

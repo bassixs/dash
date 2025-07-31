@@ -122,7 +122,17 @@ function DashboardPage() {
   if (isLoading) return <Loading />;
   if (error) return <ErrorMessage message={error instanceof Error ? error.message : 'Не удалось загрузить данные. Попробуйте снова.'} />;
 
-  console.log('Rendering DashboardPage:', { periods, currentDataLength: currentData.length, selectedProject, selectedPeriod, lastPeriod });
+  console.log('DashboardPage Debug:', { 
+    periods, 
+    currentDataLength: currentData.length, 
+    selectedProject, 
+    selectedPeriod, 
+    lastPeriod,
+    periodsLength: periods.length,
+    firstPeriod: periods[0],
+    lastPeriodInArray: periods[periods.length - 1],
+    allDataPeriods: data?.data.map(r => r.period).slice(0, 10) // Показываем первые 10 периодов
+  });
 
   return (
     <ErrorBoundary>
