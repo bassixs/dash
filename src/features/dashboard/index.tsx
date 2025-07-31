@@ -23,7 +23,15 @@ function DashboardPage() {
   
   const periods = useMemo(() => {
     const allPeriods = [...new Set(data?.data.map((r: ProjectRecordInterface) => r.period) || [])];
-    return sortPeriods(allPeriods.filter(isValidPeriod));
+    console.log('DashboardPage - All periods:', allPeriods);
+    
+    const validPeriods = allPeriods.filter(isValidPeriod);
+    console.log('DashboardPage - Valid periods:', validPeriods);
+    
+    const sortedPeriods = sortPeriods(validPeriods);
+    console.log('DashboardPage - Sorted periods:', sortedPeriods);
+    
+    return sortedPeriods;
   }, [data]);
 
   const currentData = useMemo(() => {

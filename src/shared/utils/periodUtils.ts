@@ -13,14 +13,14 @@ export function sortPeriods(periods: string[]): string[] {
       const startDateStr = period.split(' - ')[0]; // "02.06" -> "02.06"
       const [day, month] = startDateStr.split('.');
       
-      // Предполагаем, что год текущий или следующий
+      // Предполагаем, что год текущий
       const currentYear = new Date().getFullYear();
-      const date = new Date(currentYear, parseInt(month) - 1, parseInt(day));
+      let date = new Date(currentYear, parseInt(month) - 1, parseInt(day));
       
       // Если месяц меньше текущего месяца, то это следующий год
       const currentMonth = new Date().getMonth();
       if (parseInt(month) - 1 < currentMonth) {
-        date.setFullYear(currentYear + 1);
+        date = new Date(currentYear + 1, parseInt(month) - 1, parseInt(day));
       }
       
       return date;
@@ -68,5 +68,22 @@ export function getLastPeriod(periods: string[]): string | null {
  * @returns true если период валиден
  */
 export function isValidPeriod(period: string): boolean {
-  return Boolean(period && period.match(/^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/));
+  // Проверяем, что период не пустой и соответствует формату "DD.MM - DD.MM"
+  if (!period || typeof period !== 'string') return false;
+  
+  // Убираем лишние пробелы
+  const trimmedPeriod = period.trim();
+  
+  // Проверяем формат с помощью регулярного выражения
+  const periodRegex = /^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/;
+  const isValid = periodRegex.test(trimmedPeriod);
+  
+  console.log('Period validation:', {
+    period,
+    trimmedPeriod,
+    isValid,
+    regexMatch: trimmedPeriod.match(periodRegex)
+  });
+  
+  return isValid;
 } 

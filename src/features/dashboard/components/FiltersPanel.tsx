@@ -17,17 +17,25 @@ export default function FiltersPanel() {
 
   const projects = [...new Set(data.data.map((r: ProjectRecordInterface) => r.project))].sort();
   
-  const sortedPeriods = sortPeriods(
-    [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))]
-      .filter(isValidPeriod)
-  );
+  // Получаем все периоды из данных
+  const allPeriods = [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))];
+  console.log('All periods from data:', allPeriods);
+  
+  // Фильтруем валидные периоды
+  const validPeriods = allPeriods.filter(isValidPeriod);
+  console.log('Valid periods:', validPeriods);
+  
+  // Сортируем периоды
+  const sortedPeriods = sortPeriods(validPeriods);
+  console.log('Sorted periods:', sortedPeriods);
   
   // Получаем периоды в обратном порядке для отображения (последние сверху)
   const displayPeriods = getPeriodsForDisplay(sortedPeriods);
+  console.log('Display periods:', displayPeriods);
 
   console.log('FiltersPanel Debug:', {
-    allPeriods: [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))],
-    filteredPeriods: [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))].filter(isValidPeriod),
+    allPeriods: allPeriods,
+    validPeriods: validPeriods,
     sortedPeriods: sortedPeriods,
     displayPeriods: displayPeriods,
     selectedPeriod,
