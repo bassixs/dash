@@ -48,12 +48,18 @@ export async function parseExcelFromPublic(
 
       let currentPeriod = '';
       const records: ProjectRecordInterface[] = [];
+      const periodsInSheet: string[] = [];
+
+      console.log(`Processing ${jsonData.length} rows in sheet: ${sheet.name}`);
 
       jsonData.slice(1).forEach((row: any[], rowIndex: number) => {
         const [link, views, si, er] = row;
+        
+        // Проверяем, является ли строка периодом
         if (typeof link === 'string' && link.match(/^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/)) {
-          currentPeriod = link;
-          console.log(`Found period in ${sheet.name}: ${currentPeriod}`);
+          currentPeriod = link.trim();
+          periodsInSheet.push(currentPeriod);
+          console.log(`Found period in ${sheet.name} row ${rowIndex + 1}: "${currentPeriod}"`);
           return;
         }
 
@@ -68,7 +74,8 @@ export async function parseExcelFromPublic(
             er,
             erType: typeof er,
             erNumber: Number(er),
-            isFinite: Number.isFinite(Number(er))
+            isFinite: Number.isFinite(Number(er)),
+            currentPeriod
           });
         }
 
@@ -84,14 +91,28 @@ export async function parseExcelFromPublic(
         records.push(record);
       });
 
-      console.log(`Sheet ${sheet.name} records:`, records.length, 'periods:', [...new Set(records.map(r => r.period))]);
+      console.log(`Sheet ${sheet.name} summary:`, {
+        totalRecords: records.length,
+        periodsFound: periodsInSheet,
+        uniquePeriods: [...new Set(periodsInSheet)],
+        recordsWithPeriods: records.filter(r => r.period).length,
+        recordsWithoutPeriods: records.filter(r => !r.period).length
+      });
+
       if (records.length > 0) {
         allRecords.push(...records);
         projects.push(sheet.name);
       }
     });
 
-    console.log('Parsed Excel data:', { records: allRecords.length, projects: projects.length });
+    console.log('Final Excel parsing summary:', { 
+      totalRecords: allRecords.length, 
+      projects: projects.length,
+      allPeriods: [...new Set(allRecords.map(r => r.period))],
+      recordsWithPeriods: allRecords.filter(r => r.period).length,
+      recordsWithoutPeriods: allRecords.filter(r => !r.period).length
+    });
+
     return { data: allRecords, projects };
   } catch (err) {
     console.error('Excel parsing error:', err);

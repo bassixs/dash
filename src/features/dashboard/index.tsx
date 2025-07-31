@@ -9,7 +9,7 @@ import Loading from './components/Loading';
 import ErrorMessage from './components/Error';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ProjectRecordInterface } from '@core/models/ProjectRecord';
-import { sortPeriods, isValidPeriod, getLastPeriod } from '@shared/utils/periodUtils';
+import { sortPeriodsSimple, isValidPeriod, getLastPeriod } from '@shared/utils/periodUtils';
 
 interface ExcelData {
   data: ProjectRecordInterface[];
@@ -28,8 +28,8 @@ function DashboardPage() {
     const validPeriods = allPeriods.filter(isValidPeriod);
     console.log('DashboardPage - Valid periods:', validPeriods);
     
-    const sortedPeriods = sortPeriods(validPeriods);
-    console.log('DashboardPage - Sorted periods:', sortedPeriods);
+    const sortedPeriods = sortPeriodsSimple(validPeriods);
+    console.log('DashboardPage - Sorted periods (simple):', sortedPeriods);
     
     return sortedPeriods;
   }, [data]);
@@ -117,7 +117,8 @@ function DashboardPage() {
       allPeriods: periods,
       lastPeriodDataLength: lastPeriodData.length,
       totalViews,
-      target
+      target,
+      lastPeriodData: lastPeriodData.slice(0, 3) // Показываем первые 3 записи для отладки
     });
     
     return {

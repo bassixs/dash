@@ -3,7 +3,7 @@ import { useExcelData } from '../hooks/useExcelData';
 import { useDashboardStore } from '../../../shared/store/useDashboardStore';
 import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { ProjectRecordInterface } from '@core/models/ProjectRecord';
-import { sortPeriods, isValidPeriod, getPeriodsForDisplay } from '@shared/utils/periodUtils';
+import { sortPeriodsSimple, isValidPeriod, getPeriodsForDisplay } from '@shared/utils/periodUtils';
 
 /**
  * Компонент панели фильтров для дашборда
@@ -25,9 +25,9 @@ export default function FiltersPanel() {
   const validPeriods = allPeriods.filter(isValidPeriod);
   console.log('Valid periods:', validPeriods);
   
-  // Сортируем периоды
-  const sortedPeriods = sortPeriods(validPeriods);
-  console.log('Sorted periods:', sortedPeriods);
+  // Сортируем периоды (используем простую логику)
+  const sortedPeriods = sortPeriodsSimple(validPeriods);
+  console.log('Sorted periods (simple):', sortedPeriods);
   
   // Получаем периоды в обратном порядке для отображения (последние сверху)
   const displayPeriods = getPeriodsForDisplay(sortedPeriods);

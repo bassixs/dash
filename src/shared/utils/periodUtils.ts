@@ -13,7 +13,7 @@ export function sortPeriods(periods: string[]): string[] {
       const startDateStr = period.split(' - ')[0]; // "02.06" -> "02.06"
       const [day, month] = startDateStr.split('.');
       
-      // Предполагаем, что год текущий
+      // Создаем дату, предполагая текущий год
       const currentYear = new Date().getFullYear();
       let date = new Date(currentYear, parseInt(month) - 1, parseInt(day));
       
@@ -40,6 +40,31 @@ export function sortPeriods(periods: string[]): string[] {
     
     // Сортируем от прошлого к настоящему
     return dateA.getTime() - dateB.getTime();
+  });
+}
+
+/**
+ * Альтернативная функция сортировки - более простая логика
+ * @param periods - массив периодов в формате "DD.MM - DD.MM"
+ * @returns отсортированный массив периодов
+ */
+export function sortPeriodsSimple(periods: string[]): string[] {
+  return periods.sort((a, b) => {
+    // Извлекаем месяц и день из начала периода
+    const getMonthDay = (period: string) => {
+      const startDateStr = period.split(' - ')[0]; // "02.06" -> "02.06"
+      const [day, month] = startDateStr.split('.');
+      return { month: parseInt(month), day: parseInt(day) };
+    };
+    
+    const dateA = getMonthDay(a);
+    const dateB = getMonthDay(b);
+    
+    // Сначала сравниваем по месяцам, потом по дням
+    if (dateA.month !== dateB.month) {
+      return dateA.month - dateB.month;
+    }
+    return dateA.day - dateB.day;
   });
 }
 
