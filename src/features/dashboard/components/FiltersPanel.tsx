@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { FunnelIcon, XMarkIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
 import { ProjectRecordInterface } from '@core/models/ProjectRecord';
 import { sortPeriodsSimple, isValidPeriod, getPeriodsForDisplay } from '@shared/utils/periodUtils';
 
 import { useExcelData } from '../hooks/useExcelData';
 import { useDashboardStore } from '../../../shared/store/useDashboardStore';
 
+interface FiltersPanelProps {
+  onOpenKPISettings?: () => void;
+}
+
 /**
  * Компонент панели фильтров для дашборда
  */
-export default function FiltersPanel() {
+export default function FiltersPanel({ onOpenKPISettings }: FiltersPanelProps) {
   const { data } = useExcelData();
   const { selectedProject, selectedPeriod, setSelectedProject, setSelectedPeriod, resetFilters } = useDashboardStore();
   const [open, setOpen] = useState(false);
@@ -61,13 +65,28 @@ export default function FiltersPanel() {
 
   return (
     <div className="fixed top-4 right-4 z-50">
-      <button
-        onClick={() => setOpen(!open)}
-        className="btn-primary p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
-        aria-label="Фильтры"
-      >
-        {open ? <XMarkIcon className="w-6 h-6" /> : <FunnelIcon className="w-6 h-6" />}
-      </button>
+      <div className="flex gap-2">
+        {/* Кнопка KPI */}
+        {selectedProject && selectedPeriod && onOpenKPISettings && (
+          <button
+            onClick={onOpenKPISettings}
+            className="btn-primary p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+            aria-label="Настройки KPI"
+            title="Настройки KPI"
+          >
+            <Cog6ToothIcon className="w-6 h-6" />
+          </button>
+        )}
+        
+        {/* Кнопка фильтров */}
+        <button
+          onClick={() => setOpen(!open)}
+          className="btn-primary p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+          aria-label="Фильтры"
+        >
+          {open ? <XMarkIcon className="w-6 h-6" /> : <FunnelIcon className="w-6 h-6" />}
+        </button>
+      </div>
 
       {open && (
         <div className="fixed top-0 right-0 h-full w-80 bg-white dark:bg-gray-900 shadow-2xl p-6 overflow-y-auto animate-slideIn">

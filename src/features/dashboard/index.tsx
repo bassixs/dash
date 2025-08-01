@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { ProjectRecordInterface } from '@core/models/ProjectRecord';
 import { sortPeriodsSimple, isValidPeriod, getLastPeriod } from '@shared/utils/periodUtils';
 
@@ -12,11 +12,14 @@ import FiltersPanel from './components/FiltersPanel';
 import Loading from './components/Loading';
 import ErrorMessage from './components/Error';
 import ErrorBoundary from './components/ErrorBoundary';
+import KPICard from './components/KPICard';
+import KPISettings from './components/KPISettings';
 
 function DashboardPage() {
   const { data, isLoading, error } = useExcelData();
   const { selectedPeriod, selectedProject, setSelectedPeriod } = useDashboardStore();
   const filtered = useFilteredData(data?.data || []);
+  const [isKPISettingsOpen, setIsKPISettingsOpen] = useState(false);
   
   const periods = useMemo(() => {
     const allPeriods = [...new Set(data?.data.map((r: ProjectRecordInterface) => r.period) || [])];
@@ -143,7 +146,7 @@ function DashboardPage() {
   return (
     <ErrorBoundary>
       <div className="p-4 pb-20">
-        <FiltersPanel />
+        <FiltersPanel onOpenKPISettings={() => setIsKPISettingsOpen(true)} />
         
         {/* Заголовок */}
         <div className="text-center mb-6">
@@ -152,6 +155,11 @@ function DashboardPage() {
             {selectedPeriod || 'Все периоды'}
             {selectedProject && ` • ${selectedProject}`}
           </p>
+        </div>
+
+        {/* KPI карточка */}
+        <div className="mb-4">
+          <KPICard />
         </div>
 
         {/* Основная статистика */}
@@ -225,6 +233,12 @@ function DashboardPage() {
             </div>
           </div>
         )}
+
+        {/* Модальное окно настроек KPI */}
+        <KPISettings 
+          isOpen={isKPISettingsOpen} 
+          onClose={() => setIsKPISettingsOpen(false)} 
+        />
       </div>
     </ErrorBoundary>
   );
