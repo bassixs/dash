@@ -89,7 +89,7 @@ export default function KPISummary() {
   const hasProgressData = progress.some(p => p.period === selectedPeriod);
   if (!hasProgressData) {
     return (
-      <div className="fixed bottom-4 left-4 right-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 z-40">
+      <div className="fixed bottom-4 left-4 right-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 z-30">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Cog6ToothIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -118,7 +118,7 @@ export default function KPISummary() {
   };
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-40">
+    <div className="fixed bottom-4 left-4 right-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-30">
       {/* Компактная карточка */}
       <div 
         className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"

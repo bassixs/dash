@@ -1,8 +1,9 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { ProjectRecordInterface } from '@core/models/ProjectRecord';
-import { sortPeriodsSimple, isValidPeriod, getLastPeriod } from '@shared/utils/periodUtils';
+import { sortPeriodsSimple, getLastPeriod } from '@shared/utils/periodUtils';
 
 import { useDashboardStore } from '../../shared/store/useDashboardStore';
+import { useKPIStore } from '../../shared/store/useKPIStore';
 
 import { useExcelData } from './hooks/useExcelData';
 import { useFilteredData } from './hooks/useFilteredData';
@@ -15,70 +16,85 @@ import ErrorBoundary from './components/ErrorBoundary';
 import KPISummary from './components/KPISummary';
 import KPISettings from './components/KPISettings';
 
-function DashboardPage() {
+export default function Dashboard() {
   const { data, isLoading, error } = useExcelData();
-  const { selectedPeriod, selectedProject, setSelectedPeriod } = useDashboardStore();
-  const filtered = useFilteredData(data?.data || []);
+  const { selectedProject, selectedPeriod, setSelectedPeriod } = useDashboardStore();
+  const { loadKPIData } = useKPIStore();
   const [isKPISettingsOpen, setIsKPISettingsOpen] = useState(false);
-  
+
+  // Загружаем KPI данные при инициализации
+  useEffect(() => {
+    loadKPIData();
+  }, [loadKPIData]);
+
+  // Автоматически устанавливаем последний период при загрузке данных
+  useEffect(() => {
+    if (data?.data && !selectedPeriod) {
+      const periods = [...new Set(data.data.map(record => record.period))];
+      const sortedPeriods = sortPeriodsSimple(periods);
+      const lastPeriod = getLastPeriod(sortedPeriods);
+      
+      if (lastPeriod) {
+        setSelectedPeriod(lastPeriod);
+      }
+    }
+  }, [data, selectedPeriod, setSelectedPeriod]);
+
   const periods = useMemo(() => {
-    const allPeriods = [...new Set(data?.data.map((r: ProjectRecordInterface) => r.period) || [])];
-    console.log('DashboardPage - All periods:', allPeriods);
-    
-    const validPeriods = allPeriods.filter(isValidPeriod);
-    console.log('DashboardPage - Valid periods:', validPeriods);
-    
-    const sortedPeriods = sortPeriodsSimple(validPeriods);
-    console.log('DashboardPage - Sorted periods (simple):', sortedPeriods);
-    
-    return sortedPeriods;
+    if (!data?.data) return [];
+    return [...new Set(data.data.map(record => record.period))];
   }, [data]);
 
+  // Используем хук для фильтрации данных
+  const filteredData = useFilteredData(data?.data || []);
+
   const currentData = useMemo(() => {
-    console.log('currentData calculation:', { filteredLength: filtered.length, dataLength: data?.data.length });
-    return filtered.length > 0 ? filtered : data?.data || [];
-  }, [filtered, data]);
+    console.log('currentData calculation:', { filteredLength: filteredData.length, dataLength: data?.data.length });
+    return filteredData.length > 0 ? filteredData : data?.data || [];
+  }, [filteredData, data]);
 
   useEffect(() => {
-    if (periods.length > 0 && !selectedPeriod) {
-      console.log('DashboardPage: Setting default period to', periods[periods.length - 1]);
-      setSelectedPeriod(periods[periods.length - 1]); // Устанавливаем последний (актуальный) период
-    }
-  }, [periods, selectedPeriod, setSelectedPeriod]);
+    console.log('Dashboard data update:', {
+      dataLength: data?.data?.length || 0,
+      filteredLength: filteredData.length,
+      selectedProject,
+      selectedPeriod,
+      currentDataLength: currentData.length
+    });
+  }, [data, filteredData, selectedProject, selectedPeriod, currentData]);
 
   // Улучшенный расчет статистики
   const { totalViews, totalSI, avgER, totalLinks, topProjects } = useMemo(() => {
-    const totalViews = filtered.reduce((sum: number, r: ProjectRecordInterface) => sum + r.views, 0);
-    const totalSI = filtered.reduce((sum: number, r: ProjectRecordInterface) => sum + r.si, 0);
+    const totalViews = filteredData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.views, 0);
+    const totalSI = filteredData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.si, 0);
     
     // Отладочная информация для ЕР
     console.log('ER Debug:', {
-      filteredLength: filtered.length,
-      sampleER: filtered.slice(0, 5).map(r => ({ 
+      filteredLength: filteredData.length,
+      sampleER: filteredData.slice(0, 5).map((r: ProjectRecordInterface) => ({ 
         er: r.er, 
         calculatedER: (r.si / r.views) * 100,
-        project: r.project,
         views: r.views,
         si: r.si
       })),
-      allER: filtered.map(r => r.er)
+      allER: filteredData.map((r: ProjectRecordInterface) => r.er)
     });
     
     // Исправленный расчет ЕР - используем формулу СИ/просмотры * 100
-    const avgER = filtered.length
-      ? (filtered.reduce((sum: number, r: ProjectRecordInterface) => sum + (r.si / r.views) * 100, 0) / filtered.length).toFixed(1)
+    const avgER = filteredData.length
+      ? (filteredData.reduce((sum: number, r: ProjectRecordInterface) => sum + (r.si / r.views) * 100, 0) / filteredData.length).toFixed(1)
       : '0.0';
     
     console.log('ER Calculation:', {
-      totalER: filtered.reduce((sum: number, r: ProjectRecordInterface) => sum + (r.si / r.views) * 100, 0),
+      totalER: filteredData.reduce((sum: number, r: ProjectRecordInterface) => sum + (r.si / r.views) * 100, 0),
       avgER,
-      filteredLength: filtered.length
+      filteredLength: filteredData.length
     });
     
-    const totalLinks = filtered.length;
+    const totalLinks = filteredData.length;
 
     // Топ проектов по просмотрам
-    const projectStats = filtered.reduce((acc, record) => {
+    const projectStats = filteredData.reduce((acc: { [key: string]: { views: number; si: number; count: number } }, record: ProjectRecordInterface) => {
       if (!acc[record.project]) {
         acc[record.project] = { views: 0, si: 0, count: 0 };
       }
@@ -86,20 +102,20 @@ function DashboardPage() {
       acc[record.project].si += record.si;
       acc[record.project].count += 1;
       return acc;
-    }, {} as Record<string, { views: number; si: number; count: number }>);
+    }, {});
 
     const topProjects = Object.entries(projectStats)
       .map(([project, stats]) => ({
         project,
         views: stats.views,
-        avgER: stats.views > 0 ? ((stats.si / stats.views) * 100).toFixed(1) : '0.0',
+        avgER: stats.views > 0 ? (stats.si / stats.views) * 100 : 0,
         count: stats.count
       }))
       .sort((a, b) => b.views - a.views)
       .slice(0, 5);
 
     return { totalViews, totalSI, avgER, totalLinks, topProjects };
-  }, [filtered]);
+  }, [filteredData]);
 
   // Получаем последний период для прогресс бара
   const lastPeriod = getLastPeriod(periods);
@@ -241,5 +257,3 @@ function DashboardPage() {
     </ErrorBoundary>
   );
 }
-
-export default DashboardPage;
