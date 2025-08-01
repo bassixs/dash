@@ -3,7 +3,7 @@ import { ArrowDownTrayIcon, ArrowUpTrayIcon, ArrowPathIcon } from '@heroicons/re
 import { useKPIStore } from '@shared/store/useKPIStore';
 
 export default function KPISync() {
-  const { exportKPIData, importKPIData, kpis, syncKPIData, loadKPIData } = useKPIStore();
+  const { exportKPIData, importKPIData, kpis, syncKPIData, loadKPIData, clearKPIData } = useKPIStore();
   const [importData, setImportData] = useState('');
   const [message, setMessage] = useState('');
 
@@ -76,6 +76,14 @@ export default function KPISync() {
     }
   };
 
+  const handleClear = () => {
+    if (confirm('Вы уверены, что хотите очистить все KPI данные?')) {
+      clearKPIData();
+      setMessage('Данные очищены успешно!');
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
   // Показываем только если есть KPI данные
   if (kpis.length === 0) {
     return null;
@@ -89,7 +97,7 @@ export default function KPISync() {
       
       <div className="space-y-4">
         {/* Синхронизация */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <button
             onClick={handleSync}
             className="flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors"
@@ -103,6 +111,13 @@ export default function KPISync() {
           >
             <ArrowPathIcon className="w-5 h-5" />
             Загрузить
+          </button>
+          <button
+            onClick={handleClear}
+            className="flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            <ArrowPathIcon className="w-5 h-5" />
+            Очистить
           </button>
         </div>
 

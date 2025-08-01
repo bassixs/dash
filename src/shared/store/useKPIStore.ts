@@ -69,6 +69,7 @@ export interface KPIStore {
   // Синхронизация
   syncKPIData: () => Promise<void>;
   loadKPIData: () => Promise<void>;
+  clearKPIData: () => void;
   
   // Экспорт/Импорт
   exportKPIData: () => string;
@@ -87,21 +88,29 @@ export interface KPIStore {
 // Функция для синхронизации с Telegram Cloud Storage
 const syncWithTelegram = async (key: string, data: unknown) => {
   try {
+    // Для тестирования используем только localStorage
+    console.log(`Syncing ${key} to localStorage:`, data);
+    localStorage.setItem(`kpi-${key}`, JSON.stringify(data));
+    console.log(`Successfully synced ${key} to localStorage`);
+
+    // Попытка синхронизации с Telegram Cloud Storage (если доступен)
     if (window.Telegram?.WebApp?.CloudStorage) {
-      console.log(`Syncing ${key} with Telegram Cloud Storage:`, data);
-      await window.Telegram.WebApp.CloudStorage.setItem(key, JSON.stringify(data));
-      console.log(`Successfully synced ${key} with Telegram Cloud Storage`);
+      try {
+        console.log(`Attempting to sync ${key} with Telegram Cloud Storage`);
+        await window.Telegram.WebApp.CloudStorage.setItem(key, JSON.stringify(data));
+        console.log(`Successfully synced ${key} with Telegram Cloud Storage`);
+      } catch (telegramError) {
+        console.warn('Failed to sync with Telegram Cloud Storage:', telegramError);
+      }
     } else {
-      // Fallback на localStorage
-      console.log(`Telegram Cloud Storage not available, using localStorage for ${key}`);
-      localStorage.setItem(`kpi-${key}`, JSON.stringify(data));
+      console.log('Telegram Cloud Storage not available, using localStorage only');
     }
   } catch (error) {
-    console.warn('Failed to sync with Telegram Cloud Storage:', error);
+    console.warn('Failed to sync data:', error);
     // Fallback на localStorage
     try {
       localStorage.setItem(`kpi-${key}`, JSON.stringify(data));
-      console.log(`Successfully saved ${key} to localStorage`);
+      console.log(`Successfully saved ${key} to localStorage after error`);
     } catch (localError) {
       console.warn('Failed to save to localStorage:', localError);
     }
@@ -111,38 +120,34 @@ const syncWithTelegram = async (key: string, data: unknown) => {
 // Функция для загрузки из Telegram Cloud Storage
 const loadFromTelegram = async (key: string): Promise<unknown> => {
   try {
+    // Сначала пробуем localStorage
+    console.log(`Loading ${key} from localStorage`);
+    const localData = localStorage.getItem(`kpi-${key}`);
+    if (localData) {
+      console.log(`Successfully loaded ${key} from localStorage:`, localData);
+      return JSON.parse(localData);
+    }
+
+    // Затем пробуем Telegram Cloud Storage (если доступен)
     if (window.Telegram?.WebApp?.CloudStorage) {
       console.log(`Loading ${key} from Telegram Cloud Storage`);
       const data = await window.Telegram.WebApp.CloudStorage.getItem(key);
       if (data) {
+        // Проверяем, что это не HTML-страница
+        if (typeof data === 'string' && data.trim().startsWith('<')) {
+          console.warn(`Received HTML instead of JSON for ${key}:`, data.substring(0, 100));
+          return null;
+        }
         console.log(`Successfully loaded ${key} from Telegram Cloud Storage:`, data);
         return JSON.parse(data);
       } else {
         console.log(`No data found for ${key} in Telegram Cloud Storage`);
       }
     } else {
-      // Fallback на localStorage
-      console.log(`Telegram Cloud Storage not available, loading ${key} from localStorage`);
-      const data = localStorage.getItem(`kpi-${key}`);
-      if (data) {
-        console.log(`Successfully loaded ${key} from localStorage:`, data);
-        return JSON.parse(data);
-      } else {
-        console.log(`No data found for ${key} in localStorage`);
-      }
+      console.log('Telegram Cloud Storage not available');
     }
   } catch (error) {
-    console.warn('Failed to load from Telegram Cloud Storage:', error);
-    // Fallback на localStorage
-    try {
-      const data = localStorage.getItem(`kpi-${key}`);
-      if (data) {
-        console.log(`Successfully loaded ${key} from localStorage after error:`, data);
-        return JSON.parse(data);
-      }
-    } catch (localError) {
-      console.warn('Failed to load from localStorage:', localError);
-    }
+    console.warn('Failed to load data:', error);
   }
   return null;
 };
@@ -292,6 +297,12 @@ export const useKPIStore = create<KPIStore>()(
         }
       },
 
+      clearKPIData: () => {
+        set({ kpis: [], currentKPI: null });
+        console.log('KPI data cleared.');
+        syncWithTelegram('kpi-data', []);
+      },
+
       exportKPIData: () => {
         return JSON.stringify({
           kpis: get().kpis,
@@ -302,18 +313,28 @@ export const useKPIStore = create<KPIStore>()(
 
       importKPIData: (dataString: string) => {
         try {
+          // Проверяем, что это не HTML-страница
+          if (dataString.trim().startsWith('<')) {
+            console.warn('Received HTML instead of JSON for import');
+            return false;
+          }
+
           const data = JSON.parse(dataString) as { kpis: KPI[]; progress: Progress[] };
           if (data.kpis && data.progress) {
             set({
               kpis: data.kpis,
               progress: data.progress
             });
+            console.log('Successfully imported KPI data:', data);
             return true;
+          } else {
+            console.warn('Invalid KPI data format - missing kpis or progress');
+            return false;
           }
         } catch (error) {
           console.warn('Failed to import KPI data:', error);
+          return false;
         }
-        return false;
       },
 
       getKPIForProject: (project, period) => {
