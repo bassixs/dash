@@ -53,6 +53,9 @@ export interface KPIStore {
   progress: Progress[];
   currentProgress: Progress | null;
   
+  // Инициализация
+  init: () => Promise<void>;
+  
   // Actions для KPI
   addKPI: (kpi: Omit<KPI, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateKPI: (id: string, updates: Partial<KPI>) => void;
@@ -85,9 +88,12 @@ export interface KPIStore {
 const syncWithTelegram = async (key: string, data: unknown) => {
   try {
     if (window.Telegram?.WebApp?.CloudStorage) {
+      console.log(`Syncing ${key} with Telegram Cloud Storage:`, data);
       await window.Telegram.WebApp.CloudStorage.setItem(key, JSON.stringify(data));
+      console.log(`Successfully synced ${key} with Telegram Cloud Storage`);
     } else {
       // Fallback на localStorage
+      console.log(`Telegram Cloud Storage not available, using localStorage for ${key}`);
       localStorage.setItem(`kpi-${key}`, JSON.stringify(data));
     }
   } catch (error) {
@@ -95,6 +101,7 @@ const syncWithTelegram = async (key: string, data: unknown) => {
     // Fallback на localStorage
     try {
       localStorage.setItem(`kpi-${key}`, JSON.stringify(data));
+      console.log(`Successfully saved ${key} to localStorage`);
     } catch (localError) {
       console.warn('Failed to save to localStorage:', localError);
     }
@@ -105,24 +112,39 @@ const syncWithTelegram = async (key: string, data: unknown) => {
 const loadFromTelegram = async (key: string): Promise<unknown> => {
   try {
     if (window.Telegram?.WebApp?.CloudStorage) {
+      console.log(`Loading ${key} from Telegram Cloud Storage`);
       const data = await window.Telegram.WebApp.CloudStorage.getItem(key);
-      return data ? JSON.parse(data) : null;
+      if (data) {
+        console.log(`Successfully loaded ${key} from Telegram Cloud Storage:`, data);
+        return JSON.parse(data);
+      } else {
+        console.log(`No data found for ${key} in Telegram Cloud Storage`);
+      }
     } else {
       // Fallback на localStorage
+      console.log(`Telegram Cloud Storage not available, loading ${key} from localStorage`);
       const data = localStorage.getItem(`kpi-${key}`);
-      return data ? JSON.parse(data) : null;
+      if (data) {
+        console.log(`Successfully loaded ${key} from localStorage:`, data);
+        return JSON.parse(data);
+      } else {
+        console.log(`No data found for ${key} in localStorage`);
+      }
     }
   } catch (error) {
     console.warn('Failed to load from Telegram Cloud Storage:', error);
     // Fallback на localStorage
     try {
       const data = localStorage.getItem(`kpi-${key}`);
-      return data ? JSON.parse(data) : null;
+      if (data) {
+        console.log(`Successfully loaded ${key} from localStorage after error:`, data);
+        return JSON.parse(data);
+      }
     } catch (localError) {
       console.warn('Failed to load from localStorage:', localError);
-      return null;
     }
   }
+  return null;
 };
 
 export const useKPIStore = create<KPIStore>()(
@@ -132,6 +154,22 @@ export const useKPIStore = create<KPIStore>()(
       currentKPI: null,
       progress: [],
       currentProgress: null,
+
+      // Автоматически загружаем данные при инициализации
+      init: async () => {
+        console.log('Initializing KPI store...');
+        const kpiData = await loadFromTelegram('kpi-data') as KPI[] | null;
+        const progressData = await loadFromTelegram('kpi-progress') as Progress[] | null;
+
+        if (kpiData) {
+          set({ kpis: kpiData });
+          console.log('KPI data initialized:', kpiData);
+        }
+        if (progressData) {
+          set({ progress: progressData });
+          console.log('Progress data initialized:', progressData);
+        }
+      },
 
       addKPI: async (kpiData) => {
         const newKPI: KPI = {
@@ -146,8 +184,9 @@ export const useKPIStore = create<KPIStore>()(
           currentKPI: newKPI,
         }));
 
-        // Синхронизируем с Telegram Cloud Storage
+        // Принудительно синхронизируем с Telegram Cloud Storage
         const updatedKPIs = [...get().kpis, newKPI];
+        console.log('Adding KPI and syncing:', newKPI);
         await syncWithTelegram('kpi-data', updatedKPIs);
       },
 
@@ -161,7 +200,8 @@ export const useKPIStore = create<KPIStore>()(
           currentKPI: state.currentKPI?.id === id ? { ...state.currentKPI, ...updates, updatedAt: new Date().toISOString() } : state.currentKPI,
         }));
 
-        // Синхронизируем с Telegram Cloud Storage
+        // Принудительно синхронизируем с Telegram Cloud Storage
+        console.log('Updating KPI and syncing:', { id, updates });
         await syncWithTelegram('kpi-data', get().kpis);
       },
 
@@ -171,7 +211,8 @@ export const useKPIStore = create<KPIStore>()(
           currentKPI: state.currentKPI?.id === id ? null : state.currentKPI,
         }));
 
-        // Синхронизируем с Telegram Cloud Storage
+        // Принудительно синхронизируем с Telegram Cloud Storage
+        console.log('Deleting KPI and syncing:', { id });
         await syncWithTelegram('kpi-data', get().kpis);
       },
 
@@ -218,10 +259,12 @@ export const useKPIStore = create<KPIStore>()(
 
       syncKPIData: async () => {
         try {
+          console.log('Syncing KPI data...');
           // Синхронизируем KPI данные
           await syncWithTelegram('kpi-data', get().kpis);
           // Синхронизируем прогресс
           await syncWithTelegram('kpi-progress', get().progress);
+          console.log('KPI data synced successfully');
         } catch (error) {
           console.warn('Failed to sync KPI data:', error);
         }
@@ -229,15 +272,20 @@ export const useKPIStore = create<KPIStore>()(
 
       loadKPIData: async () => {
         try {
+          console.log('Loading KPI data...');
           // Загружаем KPI данные из Telegram Cloud Storage
           const kpiData = await loadFromTelegram('kpi-data') as KPI[] | null;
           const progressData = await loadFromTelegram('kpi-progress') as Progress[] | null;
 
+          console.log('Loaded KPI data:', { kpiData: kpiData?.length || 0, progressData: progressData?.length || 0 });
+
           if (kpiData) {
             set({ kpis: kpiData });
+            console.log('KPI data loaded successfully:', kpiData);
           }
           if (progressData) {
             set({ progress: progressData });
+            console.log('Progress data loaded successfully:', progressData);
           }
         } catch (error) {
           console.warn('Failed to load KPI data:', error);

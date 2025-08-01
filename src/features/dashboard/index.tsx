@@ -19,12 +19,17 @@ import TopProjectsModal from './components/TopProjectsModal';
 export default function Dashboard() {
   const { data, isLoading, error } = useExcelData();
   const { selectedProject, selectedPeriod, setSelectedPeriod } = useDashboardStore();
-  const { loadKPIData, kpis } = useKPIStore();
+  const { loadKPIData, kpis, init } = useKPIStore();
   const [isKPISettingsOpen, setIsKPISettingsOpen] = useState(false);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     type: 'views' | 'er' | 'si' | 'records' | null;
   }>({ isOpen: false, type: null });
+
+  // Инициализируем KPI данные при загрузке
+  useEffect(() => {
+    init();
+  }, [init]);
 
   // Загружаем KPI данные при инициализации
   useEffect(() => {

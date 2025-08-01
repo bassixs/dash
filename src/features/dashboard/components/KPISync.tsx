@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { ArrowDownTrayIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
+import { ArrowDownTrayIcon, ArrowUpTrayIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { useKPIStore } from '@shared/store/useKPIStore';
 
 export default function KPISync() {
-  const { exportKPIData, importKPIData, kpis } = useKPIStore();
+  const { exportKPIData, importKPIData, kpis, syncKPIData, loadKPIData } = useKPIStore();
   const [importData, setImportData] = useState('');
   const [message, setMessage] = useState('');
 
@@ -52,6 +52,30 @@ export default function KPISync() {
     }
   };
 
+  const handleSync = async () => {
+    try {
+      setMessage('Синхронизация...');
+      await syncKPIData();
+      setMessage('Данные синхронизированы успешно!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch {
+      setMessage('Ошибка при синхронизации');
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
+  const handleLoad = async () => {
+    try {
+      setMessage('Загрузка данных...');
+      await loadKPIData();
+      setMessage('Данные загружены успешно!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch {
+      setMessage('Ошибка при загрузке данных');
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
   // Показываем только если есть KPI данные
   if (kpis.length === 0) {
     return null;
@@ -64,11 +88,29 @@ export default function KPISync() {
       </h3>
       
       <div className="space-y-4">
+        {/* Синхронизация */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={handleSync}
+            className="flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            <ArrowPathIcon className="w-5 h-5" />
+            Синхронизировать
+          </button>
+          <button
+            onClick={handleLoad}
+            className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            <ArrowPathIcon className="w-5 h-5" />
+            Загрузить
+          </button>
+        </div>
+
         {/* Экспорт */}
         <div>
           <button
             onClick={handleExport}
-            className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors"
           >
             <ArrowDownTrayIcon className="w-5 h-5" />
             Экспортировать KPI данные
@@ -89,7 +131,7 @@ export default function KPISync() {
           />
           <button
             onClick={handleImport}
-            className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors mt-2"
+            className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors mt-2"
           >
             <ArrowUpTrayIcon className="w-5 h-5" />
             Импортировать KPI данные
