@@ -1,149 +1,67 @@
-import React, { useState, useEffect } from 'react';
-import { FunnelIcon, XMarkIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
-import { ProjectRecordInterface } from '@core/models/ProjectRecord';
-import { sortPeriodsSimple, isValidPeriod, getPeriodsForDisplay } from '@shared/utils/periodUtils';
+import React, { useState } from 'react';
+import { FunnelIcon } from '@heroicons/react/24/outline';
+import { useDashboardStore } from '@shared/store/useDashboardStore';
 
-import { useExcelData } from '../hooks/useExcelData';
-import { useDashboardStore } from '../../../shared/store/useDashboardStore';
-
-interface FiltersPanelProps {
-  onOpenKPISettings?: () => void;
-}
-
-/**
- * Компонент панели фильтров для дашборда
- */
-export default function FiltersPanel({ onOpenKPISettings }: FiltersPanelProps) {
-  const { data } = useExcelData();
+export default function FiltersPanel() {
   const { selectedProject, selectedPeriod, setSelectedProject, setSelectedPeriod, resetFilters } = useDashboardStore();
-  const [open, setOpen] = useState(false);
-
-  // Перемещаем useEffect в начало компонента
-  useEffect(() => {
-    if (data && data.data.length > 0) {
-      const allPeriods = [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))];
-      const validPeriods = allPeriods.filter(isValidPeriod);
-      const sortedPeriods = sortPeriodsSimple(validPeriods);
-      
-      if (sortedPeriods.length > 0 && !selectedPeriod) {
-        console.log('FiltersPanel: No period selected, but not setting default');
-        // Не устанавливаем период автоматически, чтобы "Все периоды" работало
-      }
-    }
-  }, [data, selectedPeriod, setSelectedPeriod]);
-
-  if (!data) return null;
-
-  const projects = [...new Set(data.data.map((r: ProjectRecordInterface) => r.project))].sort();
-  
-  // Получаем все периоды из данных
-  const allPeriods = [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))];
-  console.log('All periods from data:', allPeriods);
-  
-  // Фильтруем валидные периоды
-  const validPeriods = allPeriods.filter(isValidPeriod);
-  console.log('Valid periods:', validPeriods);
-  
-  // Сортируем периоды (используем простую логику)
-  const sortedPeriods = sortPeriodsSimple(validPeriods);
-  console.log('Sorted periods (simple):', sortedPeriods);
-  
-  // Получаем периоды в обратном порядке для отображения (последние сверху)
-  const displayPeriods = getPeriodsForDisplay(sortedPeriods);
-  console.log('Display periods:', displayPeriods);
-
-  console.log('FiltersPanel Debug:', {
-    allPeriods: allPeriods,
-    validPeriods: validPeriods,
-    sortedPeriods: sortedPeriods,
-    displayPeriods: displayPeriods,
-    selectedPeriod,
-    selectedProject,
-    onOpenKPISettings: !!onOpenKPISettings,
-    showKPIButton: !!(selectedPeriod && onOpenKPISettings),
-    periodsLength: sortedPeriods.length,
-    firstPeriod: sortedPeriods[0],
-    lastPeriod: sortedPeriods[sortedPeriods.length - 1]
-  });
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="fixed top-4 right-4 z-50">
       <div className="flex gap-2">
-        {/* Кнопка KPI */}
-        {selectedProject && selectedPeriod && onOpenKPISettings && (
-          <button
-            onClick={onOpenKPISettings}
-            className="btn-primary p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
-            aria-label="Настройки KPI"
-            title="Настройки KPI"
-          >
-            <Cog6ToothIcon className="w-6 h-6" />
-          </button>
-        )}
-        
-        {/* Кнопка фильтров */}
         <button
-          onClick={() => setOpen(!open)}
-          className="btn-primary p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
-          aria-label="Фильтры"
+          onClick={() => setIsOpen(!isOpen)}
+          className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg shadow-lg transition-colors"
         >
-          {open ? <XMarkIcon className="w-6 h-6" /> : <FunnelIcon className="w-6 h-6" />}
+          <FunnelIcon className="w-5 h-5" />
         </button>
       </div>
 
-      {open && (
-        <div className="fixed top-0 right-0 h-full w-80 bg-white dark:bg-gray-900 shadow-2xl p-6 overflow-y-auto animate-slideIn">
-          <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">Фильтры</h2>
+      {isOpen && (
+        <div className="absolute top-12 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 min-w-64">
+          <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Фильтры</h3>
+          
+          <div className="space-y-4">
+            {/* Фильтр по проекту */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Проект
+              </label>
+              <select
+                value={selectedProject}
+                onChange={(e) => setSelectedProject(e.target.value)}
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="">Все проекты</option>
+                <option value="Проект 1">Проект 1</option>
+                <option value="Проект 2">Проект 2</option>
+                <option value="Проект 3">Проект 3</option>
+              </select>
+            </div>
 
-          <div className="mb-6">
-            <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Спецпроект
-            </label>
-            <select
-              className="select"
-              value={selectedProject || ''}
-              onChange={(e) => setSelectedProject(e.target.value || '')}
-              aria-label="Выберите спецпроект"
-            >
-              <option value="">Все спецпроекты</option>
-              {projects.map((project) => (
-                <option key={project} value={project}>{project}</option>
-              ))}
-            </select>
-          </div>
+            {/* Фильтр по периоду */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Период
+              </label>
+              <select
+                value={selectedPeriod}
+                onChange={(e) => setSelectedPeriod(e.target.value)}
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="">Все периоды</option>
+                <option value="07.07 - 13.07">07.07 - 13.07</option>
+                <option value="14.07 - 20.07">14.07 - 20.07</option>
+                <option value="21.07 - 27.07">21.07 - 27.07</option>
+              </select>
+            </div>
 
-          <div className="mb-8">
-            <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Период
-            </label>
-            <select
-              className="select"
-              value={selectedPeriod || ''}
-              onChange={(e) => setSelectedPeriod(e.target.value || '')}
-              aria-label="Выберите период"
-            >
-              <option value="">Все периоды</option>
-              {displayPeriods.map((period) => (
-                <option key={period} value={period}>{period}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex gap-4">
+            {/* Кнопка сброса */}
             <button
-              className="btn-primary flex-1"
-              onClick={() => setOpen(false)}
+              onClick={resetFilters}
+              className="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-colors"
             >
-              Сохранить
-            </button>
-            <button
-              className="btn-secondary flex-1"
-              onClick={() => {
-                resetFilters();
-                setOpen(false);
-              }}
-            >
-              Сбросить
+              Сбросить фильтры
             </button>
           </div>
         </div>

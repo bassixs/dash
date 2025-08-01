@@ -3,48 +3,24 @@ import { ProjectRecordInterface } from '@core/models/ProjectRecord';
 import { sortPeriodsSimple, getLastPeriod } from '@shared/utils/periodUtils';
 
 import { useDashboardStore } from '../../shared/store/useDashboardStore';
-import { useKPIStore } from '../../shared/store/useKPIStore';
 
 import { useExcelData } from './hooks/useExcelData';
 import { useFilteredData } from './hooks/useFilteredData';
 import StatCard from './components/StatCard';
+import ProgressBar from './components/ProgressBar';
 import FiltersPanel from './components/FiltersPanel';
 import Loading from './components/Loading';
 import ErrorMessage from './components/Error';
 import ErrorBoundary from './components/ErrorBoundary';
-import KPISummary from './components/KPISummary';
-import KPISettings from './components/KPISettings';
 import TopProjectsModal from './components/TopProjectsModal';
 
 export default function Dashboard() {
   const { data, isLoading, error } = useExcelData();
   const { selectedProject, selectedPeriod, setSelectedPeriod } = useDashboardStore();
-  const { loadKPIData, kpis, init } = useKPIStore();
-  const [isKPISettingsOpen, setIsKPISettingsOpen] = useState(false);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     type: 'views' | 'er' | 'si' | 'records' | null;
   }>({ isOpen: false, type: null });
-
-  // Инициализируем KPI данные при загрузке
-  useEffect(() => {
-    init();
-  }, [init]);
-
-  // Загружаем KPI данные при инициализации
-  useEffect(() => {
-    loadKPIData();
-  }, [loadKPIData]);
-
-  // Отладочная информация для KPI
-  useEffect(() => {
-    console.log('KPI Debug:', {
-      kpisCount: kpis.length,
-      kpis: kpis.map(k => ({ project: k.project, period: k.period, targetViews: k.targetViews })),
-      selectedPeriod,
-      hasKPIForPeriod: kpis.some(k => k.period === selectedPeriod)
-    });
-  }, [kpis, selectedPeriod]);
 
   // Автоматически устанавливаем последний период при загрузке данных
   useEffect(() => {
@@ -120,37 +96,30 @@ export default function Dashboard() {
     };
   }, [filteredData]);
 
-  // Рассчитываем прогресс для выбранного периода с учетом KPI
+  // Получаем последний период для прогресс бара
+  const lastPeriod = getLastPeriod([...new Set(data?.data?.map(record => record.period) || [])]);
+
+  // Рассчитываем прогресс для последнего периода
   const progressData = useMemo(() => {
-    if (!selectedPeriod) return null;
+    if (!lastPeriod) return null;
     
-    const selectedPeriodData = data?.data.filter(record => record.period === selectedPeriod) || [];
-    const totalViews = selectedPeriodData.reduce((sum, record) => sum + record.views, 0);
-    
-    // Проверяем, есть ли KPI для этого периода
-    const periodKPIs = kpis.filter(kpi => kpi.period === selectedPeriod);
-    let target = 2000000; // 2 миллиона просмотров по умолчанию
-    
-    if (periodKPIs.length > 0) {
-      // Если есть KPI, суммируем целевые просмотры по всем проектам
-      target = periodKPIs.reduce((sum, kpi) => sum + kpi.targetViews, 0);
-    }
+    const lastPeriodData = data?.data.filter(record => record.period === lastPeriod) || [];
+    const totalViews = lastPeriodData.reduce((sum, record) => sum + record.views, 0);
+    const target = 2000000; // 2 миллиона просмотров
     
     console.log('Progress Bar Debug:', {
-      selectedPeriod,
-      periodKPIs: periodKPIs.length,
+      lastPeriod,
+      lastPeriodDataLength: lastPeriodData.length,
       totalViews,
-      target,
-      hasKPI: periodKPIs.length > 0
+      target
     });
     
     return {
       current: totalViews,
       target,
-      period: selectedPeriod,
-      hasKPI: periodKPIs.length > 0
+      period: lastPeriod
     };
-  }, [data, selectedPeriod, kpis]);
+  }, [data, lastPeriod]);
 
   const handleStatCardClick = (type: 'views' | 'er' | 'si' | 'records') => {
     setModalState({ isOpen: true, type });
@@ -166,7 +135,7 @@ export default function Dashboard() {
   return (
     <ErrorBoundary>
       <div className="p-4 pb-20">
-        <FiltersPanel onOpenKPISettings={() => setIsKPISettingsOpen(true)} />
+        <FiltersPanel />
         
         {/* Заголовок */}
         <div className="text-center mb-6">
@@ -207,10 +176,15 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Прогресс бар с KPI */}
+        {/* Прогресс бар для последнего периода */}
         {progressData && (
           <div className="mb-4">
-            <KPISummary />
+            <ProgressBar 
+              current={progressData.current}
+              target={progressData.target}
+              label="Прогресс просмотров"
+              period={progressData.period}
+            />
           </div>
         )}
 
@@ -245,12 +219,6 @@ export default function Dashboard() {
           title="Топ проектов по количеству записей"
           projects={topProjects.records.map(p => ({ ...p, value: p.count }))}
           valueFormatter={(value) => value.toLocaleString()}
-        />
-
-        {/* Модальное окно настроек KPI */}
-        <KPISettings 
-          isOpen={isKPISettingsOpen} 
-          onClose={() => setIsKPISettingsOpen(false)} 
         />
       </div>
     </ErrorBoundary>
