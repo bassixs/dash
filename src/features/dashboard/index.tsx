@@ -12,7 +12,7 @@ import FiltersPanel from './components/FiltersPanel';
 import Loading from './components/Loading';
 import ErrorMessage from './components/Error';
 import ErrorBoundary from './components/ErrorBoundary';
-import KPICard from './components/KPICard';
+import KPISummary from './components/KPISummary';
 import KPISettings from './components/KPISettings';
 
 function DashboardPage() {
@@ -157,11 +157,6 @@ function DashboardPage() {
           </p>
         </div>
 
-        {/* KPI карточка */}
-        <div className="mb-4">
-          <KPICard />
-        </div>
-
         {/* Основная статистика */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 mb-4">
           <div className="grid grid-cols-2 gap-4">
@@ -239,6 +234,9 @@ function DashboardPage() {
           isOpen={isKPISettingsOpen} 
           onClose={() => setIsKPISettingsOpen(false)} 
         />
+
+        {/* KPI Summary - фиксированный внизу */}
+        <KPISummary />
       </div>
     </ErrorBoundary>
   );
