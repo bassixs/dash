@@ -96,20 +96,17 @@ export default function Dashboard() {
     };
   }, [filteredData]);
 
-  // Получаем последний период для прогресс бара
-  const lastPeriod = getLastPeriod([...new Set(data?.data?.map(record => record.period) || [])]);
-
-  // Рассчитываем прогресс для последнего периода
+  // Рассчитываем прогресс для выбранного периода
   const progressData = useMemo(() => {
-    if (!lastPeriod) return null;
+    if (!selectedPeriod) return null;
     
-    const lastPeriodData = data?.data.filter(record => record.period === lastPeriod) || [];
-    const totalViews = lastPeriodData.reduce((sum, record) => sum + record.views, 0);
+    const selectedPeriodData = data?.data.filter(record => record.period === selectedPeriod) || [];
+    const totalViews = selectedPeriodData.reduce((sum, record) => sum + record.views, 0);
     const target = 2000000; // 2 миллиона просмотров
     
     console.log('Progress Bar Debug:', {
-      lastPeriod,
-      lastPeriodDataLength: lastPeriodData.length,
+      selectedPeriod,
+      selectedPeriodDataLength: selectedPeriodData.length,
       totalViews,
       target
     });
@@ -117,9 +114,9 @@ export default function Dashboard() {
     return {
       current: totalViews,
       target,
-      period: lastPeriod
+      period: selectedPeriod
     };
-  }, [data, lastPeriod]);
+  }, [data, selectedPeriod]);
 
   const handleStatCardClick = (type: 'views' | 'er' | 'si' | 'records') => {
     setModalState({ isOpen: true, type });

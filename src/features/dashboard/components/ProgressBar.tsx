@@ -13,8 +13,11 @@ interface ProgressBarProps {
 export default function ProgressBar({ current, target, label, period }: ProgressBarProps) {
   const [animatedProgress, setAnimatedProgress] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [isPlanCompleted, setIsPlanCompleted] = useState(false);
   
   const percentage = Math.min((current / target) * 100, 100);
+  const remaining = target - current;
   
   // Анимация при появлении компонента
   useEffect(() => {
@@ -37,7 +40,17 @@ export default function ProgressBar({ current, target, label, period }: Progress
       
       const interval = setInterval(() => {
         currentStep++;
-        setAnimatedProgress(Math.min(currentStep * stepValue, percentage));
+        const newProgress = Math.min(currentStep * stepValue, percentage);
+        setAnimatedProgress(newProgress);
+        
+        // Проверяем, достигли ли мы 100%
+        if (newProgress >= 100 && !isPlanCompleted) {
+          setIsPlanCompleted(true);
+          // Показываем конфети через небольшую задержку
+          setTimeout(() => {
+            setShowConfetti(true);
+          }, 500);
+        }
         
         if (currentStep >= steps) {
           clearInterval(interval);
@@ -46,8 +59,19 @@ export default function ProgressBar({ current, target, label, period }: Progress
       
       return () => clearInterval(interval);
     }
-  }, [isVisible, percentage]);
+  }, [isVisible, percentage, isPlanCompleted]);
   
+  // Скрываем конфети через 3 секунды
+  useEffect(() => {
+    if (showConfetti) {
+      const timer = setTimeout(() => {
+        setShowConfetti(false);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [showConfetti]);
+
   return (
     <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 transition-all duration-500 ${isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-4'}`}>
       <div className="flex items-center justify-between mb-2">
@@ -82,8 +106,8 @@ export default function ProgressBar({ current, target, label, period }: Progress
       </div>
       
       <div className="mt-2 text-center">
-        <span className="text-sm text-gray-600 dark:text-gray-400">
-          Осталось: {(target - current).toLocaleString()} просмотров
+        <span className={`text-sm font-medium ${isPlanCompleted ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>
+          {isPlanCompleted ? '🎉 План выполнен!' : `Осталось: ${remaining.toLocaleString()} просмотров`}
         </span>
       </div>
       
@@ -100,6 +124,35 @@ export default function ProgressBar({ current, target, label, period }: Progress
           ))}
         </div>
       </div>
+      
+      {/* Анимация конфети */}
+      {showConfetti && (
+        <div className="fixed inset-0 pointer-events-none z-50">
+          {[...Array(50)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute animate-bounce"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 2}s`,
+                animationDuration: `${1 + Math.random() * 2}s`
+              }}
+            >
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  ['bg-yellow-400', 'bg-red-400', 'bg-blue-400', 'bg-green-400', 'bg-purple-400'][
+                    Math.floor(Math.random() * 5)
+                  ]
+                }`}
+                style={{
+                  transform: `rotate(${Math.random() * 360}deg)`
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 } 
