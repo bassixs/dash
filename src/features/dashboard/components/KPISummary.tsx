@@ -128,10 +128,7 @@ export default function KPISummary() {
           <div className="flex items-center gap-2">
             <Cog6ToothIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             <span className="text-sm font-medium text-gray-900 dark:text-white">
-              KPI для периода {selectedPeriod}
-            </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              ({periodKPIs.length} проект{periodKPIs.length > 1 ? 'ов' : ''})
+              KPI для {selectedPeriod}
             </span>
           </div>
           <div className="flex items-center gap-2">

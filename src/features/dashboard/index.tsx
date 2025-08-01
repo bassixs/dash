@@ -8,24 +8,38 @@ import { useKPIStore } from '../../shared/store/useKPIStore';
 import { useExcelData } from './hooks/useExcelData';
 import { useFilteredData } from './hooks/useFilteredData';
 import StatCard from './components/StatCard';
-import ProgressBar from './components/ProgressBar';
 import FiltersPanel from './components/FiltersPanel';
 import Loading from './components/Loading';
 import ErrorMessage from './components/Error';
 import ErrorBoundary from './components/ErrorBoundary';
 import KPISummary from './components/KPISummary';
 import KPISettings from './components/KPISettings';
+import TopProjectsModal from './components/TopProjectsModal';
 
 export default function Dashboard() {
   const { data, isLoading, error } = useExcelData();
   const { selectedProject, selectedPeriod, setSelectedPeriod } = useDashboardStore();
-  const { loadKPIData } = useKPIStore();
+  const { loadKPIData, kpis } = useKPIStore();
   const [isKPISettingsOpen, setIsKPISettingsOpen] = useState(false);
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    type: 'views' | 'er' | 'si' | 'records' | null;
+  }>({ isOpen: false, type: null });
 
   // Загружаем KPI данные при инициализации
   useEffect(() => {
     loadKPIData();
   }, [loadKPIData]);
+
+  // Отладочная информация для KPI
+  useEffect(() => {
+    console.log('KPI Debug:', {
+      kpisCount: kpis.length,
+      kpis: kpis.map(k => ({ project: k.project, period: k.period, targetViews: k.targetViews })),
+      selectedPeriod,
+      hasKPIForPeriod: kpis.some(k => k.period === selectedPeriod)
+    });
+  }, [kpis, selectedPeriod]);
 
   // Автоматически устанавливаем последний период при загрузке данных
   useEffect(() => {
@@ -39,11 +53,6 @@ export default function Dashboard() {
       }
     }
   }, [data, selectedPeriod, setSelectedPeriod]);
-
-  const periods = useMemo(() => {
-    if (!data?.data) return [];
-    return [...new Set(data.data.map(record => record.period))];
-  }, [data]);
 
   // Используем хук для фильтрации данных
   const filteredData = useFilteredData(data?.data || []);
@@ -68,75 +77,86 @@ export default function Dashboard() {
     const totalViews = filteredData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.views, 0);
     const totalSI = filteredData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.si, 0);
     
-    // Отладочная информация для ЕР
-    console.log('ER Debug:', {
-      filteredLength: filteredData.length,
-      sampleER: filteredData.slice(0, 5).map((r: ProjectRecordInterface) => ({ 
-        er: r.er, 
-        calculatedER: (r.si / r.views) * 100,
-        views: r.views,
-        si: r.si
-      })),
-      allER: filteredData.map((r: ProjectRecordInterface) => r.er)
-    });
-    
     // Исправленный расчет ЕР - используем формулу СИ/просмотры * 100
     const avgER = filteredData.length
       ? (filteredData.reduce((sum: number, r: ProjectRecordInterface) => sum + (r.si / r.views) * 100, 0) / filteredData.length).toFixed(1)
       : '0.0';
-    
-    console.log('ER Calculation:', {
-      totalER: filteredData.reduce((sum: number, r: ProjectRecordInterface) => sum + (r.si / r.views) * 100, 0),
-      avgER,
-      filteredLength: filteredData.length
-    });
     
     const totalLinks = filteredData.length;
 
     return { totalViews, totalSI, avgER, totalLinks };
   }, [filteredData]);
 
-  // Получаем последний период для прогресс бара
-  const lastPeriod = getLastPeriod(periods);
+  // Рассчитываем топы проектов
+  const topProjects = useMemo(() => {
+    const projectStats = filteredData.reduce((acc: { [key: string]: { views: number; si: number; count: number } }, record: ProjectRecordInterface) => {
+      if (!acc[record.project]) {
+        acc[record.project] = { views: 0, si: 0, count: 0 };
+      }
+      acc[record.project].views += record.views;
+      acc[record.project].si += record.si;
+      acc[record.project].count += 1;
+      return acc;
+    }, {});
 
-  // Рассчитываем прогресс для выбранного периода
+    const projects = Object.entries(projectStats).map(([project, stats]) => ({
+      project,
+      views: stats.views,
+      si: stats.si,
+      count: stats.count,
+      avgER: stats.views > 0 ? (stats.si / stats.views) * 100 : 0
+    }));
+
+    return {
+      views: projects.sort((a, b) => b.views - a.views).slice(0, 5),
+      si: projects.sort((a, b) => b.si - a.si).slice(0, 5),
+      records: projects.sort((a, b) => b.count - a.count).slice(0, 5),
+      er: projects.filter(p => p.avgER > 0).sort((a, b) => b.avgER - a.avgER).slice(0, 5)
+    };
+  }, [filteredData]);
+
+  // Рассчитываем прогресс для выбранного периода с учетом KPI
   const progressData = useMemo(() => {
     if (!selectedPeriod) return null;
     
     const selectedPeriodData = data?.data.filter(record => record.period === selectedPeriod) || [];
     const totalViews = selectedPeriodData.reduce((sum, record) => sum + record.views, 0);
-    const target = 2000000; // 2 миллиона просмотров
+    
+    // Проверяем, есть ли KPI для этого периода
+    const periodKPIs = kpis.filter(kpi => kpi.period === selectedPeriod);
+    let target = 2000000; // 2 миллиона просмотров по умолчанию
+    
+    if (periodKPIs.length > 0) {
+      // Если есть KPI, суммируем целевые просмотры по всем проектам
+      target = periodKPIs.reduce((sum, kpi) => sum + kpi.targetViews, 0);
+    }
     
     console.log('Progress Bar Debug:', {
       selectedPeriod,
-      allPeriods: periods,
-      selectedPeriodDataLength: selectedPeriodData.length,
+      periodKPIs: periodKPIs.length,
       totalViews,
       target,
-      selectedPeriodData: selectedPeriodData.slice(0, 3) // Показываем первые 3 записи для отладки
+      hasKPI: periodKPIs.length > 0
     });
     
     return {
       current: totalViews,
       target,
-      period: selectedPeriod
+      period: selectedPeriod,
+      hasKPI: periodKPIs.length > 0
     };
-  }, [data, selectedPeriod, periods]);
+  }, [data, selectedPeriod, kpis]);
+
+  const handleStatCardClick = (type: 'views' | 'er' | 'si' | 'records') => {
+    setModalState({ isOpen: true, type });
+  };
+
+  const closeModal = () => {
+    setModalState({ isOpen: false, type: null });
+  };
 
   if (isLoading) return <Loading />;
   if (error) return <ErrorMessage message={error instanceof Error ? error.message : 'Не удалось загрузить данные. Попробуйте снова.'} />;
-
-  console.log('DashboardPage Debug:', { 
-    periods, 
-    currentDataLength: currentData.length, 
-    selectedProject, 
-    selectedPeriod, 
-    lastPeriod,
-    periodsLength: periods.length,
-    firstPeriod: periods[0],
-    lastPeriodInArray: periods[periods.length - 1],
-    allDataPeriods: data?.data.map(r => r.period).slice(0, 10) // Показываем первые 10 периодов
-  });
 
   return (
     <ErrorBoundary>
@@ -158,44 +178,69 @@ export default function Dashboard() {
             <StatCard 
               label="Просмотры" 
               value={totalViews.toLocaleString()} 
-              onClick={() => {}} 
-              className="bg-blue-50 dark:bg-blue-900/20"
+              onClick={() => handleStatCardClick('views')} 
+              className="bg-blue-50 dark:bg-blue-900/20 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30"
             />
             <StatCard 
               label="Средний ЕР" 
               value={`${avgER}%`} 
-              onClick={() => {}} 
-              className="bg-green-50 dark:bg-green-900/20"
+              onClick={() => handleStatCardClick('er')} 
+              className="bg-green-50 dark:bg-green-900/20 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/30"
             />
             <StatCard 
               label="СИ" 
               value={totalSI.toLocaleString()} 
-              onClick={() => {}} 
-              className="bg-purple-50 dark:bg-purple-900/20"
+              onClick={() => handleStatCardClick('si')} 
+              className="bg-purple-50 dark:bg-purple-900/20 cursor-pointer hover:bg-purple-100 dark:hover:bg-purple-900/30"
             />
             <StatCard 
               label="Записей" 
               value={totalLinks.toLocaleString()} 
-              onClick={() => {}} 
-              className="bg-orange-50 dark:bg-orange-900/20"
+              onClick={() => handleStatCardClick('records')} 
+              className="bg-orange-50 dark:bg-orange-900/20 cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-900/30"
             />
           </div>
         </div>
 
-        {/* Прогресс бар для выбранного периода */}
+        {/* Прогресс бар с KPI */}
         {progressData && (
           <div className="mb-4">
-            <ProgressBar 
-              current={progressData.current}
-              target={progressData.target}
-              label="Прогресс просмотров"
-              period={progressData.period}
-            />
+            <KPISummary />
           </div>
         )}
 
-        {/* KPI Summary */}
-        <KPISummary />
+        {/* Модальные окна */}
+        <TopProjectsModal
+          isOpen={modalState.isOpen && modalState.type === 'views'}
+          onClose={closeModal}
+          title="Топ проектов по просмотрам"
+          projects={topProjects.views.map(p => ({ ...p, value: p.views }))}
+          valueFormatter={(value) => value.toLocaleString()}
+        />
+        
+        <TopProjectsModal
+          isOpen={modalState.isOpen && modalState.type === 'er'}
+          onClose={closeModal}
+          title="Топ проектов по ЕР"
+          projects={topProjects.er.map(p => ({ ...p, value: p.avgER }))}
+          valueFormatter={(value) => `${value.toFixed(1)}%`}
+        />
+        
+        <TopProjectsModal
+          isOpen={modalState.isOpen && modalState.type === 'si'}
+          onClose={closeModal}
+          title="Топ проектов по СИ"
+          projects={topProjects.si.map(p => ({ ...p, value: p.si }))}
+          valueFormatter={(value) => value.toLocaleString()}
+        />
+        
+        <TopProjectsModal
+          isOpen={modalState.isOpen && modalState.type === 'records'}
+          onClose={closeModal}
+          title="Топ проектов по количеству записей"
+          projects={topProjects.records.map(p => ({ ...p, value: p.count }))}
+          valueFormatter={(value) => value.toLocaleString()}
+        />
 
         {/* Модальное окно настроек KPI */}
         <KPISettings 
