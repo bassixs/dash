@@ -70,7 +70,7 @@ export default function FiltersPanel({ onOpenKPISettings }: FiltersPanelProps) {
     <div className="fixed top-4 right-4 z-50">
       <div className="flex gap-2">
         {/* Кнопка KPI */}
-        {selectedPeriod && onOpenKPISettings && (
+        {selectedProject && selectedPeriod && onOpenKPISettings && (
           <button
             onClick={onOpenKPISettings}
             className="btn-primary p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"

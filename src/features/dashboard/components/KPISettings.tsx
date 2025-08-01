@@ -82,6 +82,25 @@ export default function KPISettings({ isOpen, onClose }: KPISettingsProps) {
       addKPI(kpiData);
     }
 
+    // Принудительно обновляем прогресс после установки KPI
+    if (data?.data) {
+      const projectData = data.data.filter(
+        (record) => record.project === selectedProject && record.period === selectedPeriod
+      );
+      
+      if (projectData.length > 0) {
+        const totalViews = projectData.reduce((sum, record) => sum + record.views, 0);
+        const totalSI = projectData.reduce((sum, record) => sum + record.si, 0);
+        const avgER = totalViews > 0 ? (totalSI / totalViews) * 100 : 0;
+        
+        updateProgress(selectedProject, selectedPeriod, {
+          views: totalViews,
+          si: totalSI,
+          er: avgER,
+        });
+      }
+    }
+
     setFormData({ targetViews: '', targetSI: '', targetER: '' });
     setIsEditing(false);
   };
