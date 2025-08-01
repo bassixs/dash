@@ -17,8 +17,8 @@ export function useFilteredData(data: ProjectRecordInterface[]) {
     }
 
     return data.filter((row) => {
-      const matchProject = selectedProject ? row.project === selectedProject : true;
-      const matchPeriod = selectedPeriod ? row.period === selectedPeriod : true;
+      const matchProject = selectedProject && selectedProject.trim() !== '' ? row.project === selectedProject : true;
+      const matchPeriod = selectedPeriod && selectedPeriod.trim() !== '' ? row.period === selectedPeriod : true;
       return matchProject && matchPeriod;
     });
   }, [data, selectedProject, selectedPeriod]);

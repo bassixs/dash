@@ -1,7 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
-  ChartBarIcon,
   HomeIcon,
   Cog6ToothIcon,
   ChartPieIcon
@@ -9,7 +8,6 @@ import {
 
 const navItems = [
   { path: '/', label: 'Дашборд', icon: HomeIcon },
-  { path: '/charts', label: 'Графики', icon: ChartBarIcon },
   { path: '/analytics', label: 'Аналитика', icon: ChartPieIcon },
   { path: '/settings', label: 'Настройки', icon: Cog6ToothIcon },
 ];
