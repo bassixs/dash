@@ -53,9 +53,8 @@ describe('excelService', () => {
   });
 
   it('handles fetch error', async () => {
-    // Мокаем fetch с исключением
     vi.spyOn(global, 'fetch').mockRejectedValue(new Error('Network error'));
 
-    await expect(parseExcelFromPublic('/test.xlsx')).rejects.toThrow('Не удалось загрузить файл: Network error');
+    await expect(parseExcelFromPublic('/test.xlsx')).rejects.toThrow('Ошибка парсинга Excel: Network error');
   });
 });

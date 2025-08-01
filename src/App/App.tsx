@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Dashboard from '../features/dashboard';
 import AnalyticsPage from '../features/dashboard/components/AnalyticsPage';
 import SettingsPage from '../features/dashboard/components/SettingsPage';
-import Navbar from '../features/dashboard/components/navbar';
+import Navbar from '../features/dashboard/components/Navbar';
 import '../shared/styles/global.css';
 
 // Создаем QueryClient

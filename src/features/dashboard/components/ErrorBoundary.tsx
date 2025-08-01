@@ -20,7 +20,8 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    if (process.env.NODE_ENV !== 'production') {
+    // Логируем ошибку только в development режиме
+    if (process.env.NODE_ENV === 'development') {
       console.error('ErrorBoundary caught:', error, errorInfo);
     }
   }

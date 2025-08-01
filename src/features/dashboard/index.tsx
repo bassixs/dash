@@ -54,8 +54,8 @@ export default function Dashboard() {
     const totalSI = filteredData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.si, 0);
     
     // Исправленный расчет ЕР - используем формулу СИ/просмотры * 100
-    const avgER = filteredData.length
-      ? (filteredData.reduce((sum: number, r: ProjectRecordInterface) => sum + (r.si / r.views) * 100, 0) / filteredData.length).toFixed(1)
+    const avgER = filteredData.length > 0 && totalViews > 0
+      ? ((totalSI / totalViews) * 100).toFixed(1)
       : '0.0';
     
     const totalLinks = filteredData.length;
