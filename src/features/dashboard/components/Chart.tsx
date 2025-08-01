@@ -60,7 +60,11 @@ type ChartProps = BarChartProps | LineChartProps | PieChartProps | DoughnutChart
 export default function Chart(props: ChartProps) {
   const { type, data, options } = props;
 
-  const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  // Безопасная проверка темной темы с fallback для тестов
+  const isDarkMode = typeof window !== 'undefined' && 
+    window.matchMedia ? 
+    window.matchMedia('(prefers-color-scheme: dark)').matches : 
+    false;
 
   const defaultOptions = {
     ...options,

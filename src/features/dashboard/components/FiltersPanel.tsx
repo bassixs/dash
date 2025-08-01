@@ -1,10 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FunnelIcon } from '@heroicons/react/24/outline';
+import { ProjectRecordInterface } from '@core/models/ProjectRecord';
+import { sortPeriodsSimple, isValidPeriod, getPeriodsForDisplay } from '@shared/utils/periodUtils';
 import { useDashboardStore } from '@shared/store/useDashboardStore';
 
+import { useExcelData } from '../hooks/useExcelData';
+
 export default function FiltersPanel() {
+  const { data } = useExcelData();
   const { selectedProject, selectedPeriod, setSelectedProject, setSelectedPeriod, resetFilters } = useDashboardStore();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Получаем уникальные проекты из данных
+  const projects = data?.data ? [...new Set(data.data.map((r: ProjectRecordInterface) => r.project))].sort() : [];
+
+  // Получаем периоды из данных
+  const periods = useMemo(() => {
+    if (!data?.data) return [];
+    
+    const allPeriods = [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))];
+    const validPeriods = allPeriods.filter(isValidPeriod);
+    const sortedPeriods = sortPeriodsSimple(validPeriods);
+    return getPeriodsForDisplay(sortedPeriods);
+  }, [data]);
 
   return (
     <div className="fixed top-4 right-4 z-50">
@@ -28,14 +46,14 @@ export default function FiltersPanel() {
                 Проект
               </label>
               <select
-                value={selectedProject}
-                onChange={(e) => setSelectedProject(e.target.value)}
+                value={selectedProject || ''}
+                onChange={(e) => setSelectedProject(e.target.value || '')}
                 className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="">Все проекты</option>
-                <option value="Проект 1">Проект 1</option>
-                <option value="Проект 2">Проект 2</option>
-                <option value="Проект 3">Проект 3</option>
+                {projects.map((project) => (
+                  <option key={project} value={project}>{project}</option>
+                ))}
               </select>
             </div>
 
@@ -45,14 +63,14 @@ export default function FiltersPanel() {
                 Период
               </label>
               <select
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
+                value={selectedPeriod || ''}
+                onChange={(e) => setSelectedPeriod(e.target.value || '')}
                 className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="">Все периоды</option>
-                <option value="07.07 - 13.07">07.07 - 13.07</option>
-                <option value="14.07 - 20.07">14.07 - 20.07</option>
-                <option value="21.07 - 27.07">21.07 - 27.07</option>
+                {periods.map((period) => (
+                  <option key={period} value={period}>{period}</option>
+                ))}
               </select>
             </div>
 

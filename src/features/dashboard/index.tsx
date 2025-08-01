@@ -38,21 +38,6 @@ export default function Dashboard() {
   // Используем хук для фильтрации данных
   const filteredData = useFilteredData(data?.data || []);
 
-  const currentData = useMemo(() => {
-    console.log('currentData calculation:', { filteredLength: filteredData.length, dataLength: data?.data.length });
-    return filteredData.length > 0 ? filteredData : data?.data || [];
-  }, [filteredData, data]);
-
-  useEffect(() => {
-    console.log('Dashboard data update:', {
-      dataLength: data?.data?.length || 0,
-      filteredLength: filteredData.length,
-      selectedProject,
-      selectedPeriod,
-      currentDataLength: currentData.length
-    });
-  }, [data, filteredData, selectedProject, selectedPeriod, currentData]);
-
   // Улучшенный расчет статистики
   const { totalViews, totalSI, avgER, totalLinks } = useMemo(() => {
     const totalViews = filteredData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.views, 0);
@@ -103,13 +88,6 @@ export default function Dashboard() {
     const selectedPeriodData = data?.data.filter(record => record.period === selectedPeriod) || [];
     const totalViews = selectedPeriodData.reduce((sum, record) => sum + record.views, 0);
     const target = 2000000; // 2 миллиона просмотров
-    
-    console.log('Progress Bar Debug:', {
-      selectedPeriod,
-      selectedPeriodDataLength: selectedPeriodData.length,
-      totalViews,
-      target
-    });
     
     return {
       current: totalViews,

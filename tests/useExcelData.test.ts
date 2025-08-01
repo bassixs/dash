@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { useExcelData } from '@features/dashboard/hooks/useExcelData';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProjectRecordInterface } from '@core/models/ProjectRecord';
 
 // Мокаем useQuery
@@ -14,6 +14,10 @@ vi.mock('@tanstack/react-query', async () => {
 });
 
 describe('useExcelData', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('fetches excel data successfully', async () => {
     const mockData = {
       data: [
@@ -51,15 +55,14 @@ describe('useExcelData', () => {
       isPlaceholderData: false,
       isPreviousData: false,
       isStale: false,
-      // Добавленные поля для соответствия типу UseQueryResult
       errorUpdateCount: 0,
       isInitialLoading: false,
       isPaused: false,
       isRefetching: false,
       remove: vi.fn(),
-      promise: Promise.resolve(mockData),
       isEnabled: true,
-    } as UseQueryResult<{ data: ProjectRecordInterface[]; projects: string[] }, unknown>);
+      promise: Promise.resolve(mockData),
+    } as unknown as UseQueryResult<{ data: ProjectRecordInterface[]; projects: string[] }, unknown>);
 
     const { result } = renderHook(() => useExcelData());
     expect(result.current.data).toEqual(mockData);
@@ -96,15 +99,14 @@ describe('useExcelData', () => {
       isPlaceholderData: false,
       isPreviousData: false,
       isStale: false,
-      // Добавленные поля для соответствия типу UseQueryResult
       errorUpdateCount: 1,
       isInitialLoading: false,
       isPaused: false,
       isRefetching: false,
       remove: vi.fn(),
-      promise: Promise.reject(mockError),
       isEnabled: false,
-    } as UseQueryResult<{ data: ProjectRecordInterface[]; projects: string[] }, Error>);
+      promise: Promise.reject(mockError),
+    } as unknown as UseQueryResult<{ data: ProjectRecordInterface[]; projects: string[] }, Error>);
 
     const { result } = renderHook(() => useExcelData());
     expect(result.current.error).toEqual(mockError);

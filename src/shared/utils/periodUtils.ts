@@ -29,15 +29,6 @@ export function sortPeriods(periods: string[]): string[] {
     const dateA = getStartDate(a);
     const dateB = getStartDate(b);
     
-    // Отладочная информация
-    console.log('Period sorting debug:', {
-      periodA: a,
-      periodB: b,
-      dateA: dateA.toISOString(),
-      dateB: dateB.toISOString(),
-      comparison: dateA.getTime() - dateB.getTime()
-    });
-    
     // Сортируем от прошлого к настоящему
     return dateA.getTime() - dateB.getTime();
   });
@@ -101,14 +92,5 @@ export function isValidPeriod(period: string): boolean {
   
   // Проверяем формат с помощью регулярного выражения
   const periodRegex = /^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/;
-  const isValid = periodRegex.test(trimmedPeriod);
-  
-  console.log('Period validation:', {
-    period,
-    trimmedPeriod,
-    isValid,
-    regexMatch: trimmedPeriod.match(periodRegex)
-  });
-  
-  return isValid;
+  return periodRegex.test(trimmedPeriod);
 } 

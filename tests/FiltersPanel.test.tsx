@@ -4,7 +4,6 @@ import FiltersPanel from '@features/dashboard/components/FiltersPanel';
 import { useDashboardStore } from '@shared/store/useDashboardStore';
 import { useExcelData } from '@features/dashboard/hooks/useExcelData';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { saveAs } from 'file-saver';
 import { UseQueryResult } from '@tanstack/react-query';
 import { ProjectRecordInterface } from '@core/models/ProjectRecord';
 
@@ -13,10 +12,14 @@ interface ExcelData {
   projects: string[];
 }
 
-vi.mock('file-saver');
+// Мокаем хуки
+vi.mock('@features/dashboard/hooks/useExcelData');
+vi.mock('@shared/store/useDashboardStore');
 
 describe('FiltersPanel', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+    
     vi.mocked(useExcelData).mockReturnValue({
       data: {
         data: [
@@ -52,6 +55,7 @@ describe('FiltersPanel', () => {
       isStale: false,
       fetchStatus: 'idle',
     } as unknown as UseQueryResult<ExcelData, Error>);
+    
     vi.mocked(useDashboardStore).mockReturnValue({
       selectedProject: '',
       selectedPeriod: '',
@@ -61,17 +65,20 @@ describe('FiltersPanel', () => {
     });
   });
 
-  it('renders filter panel', () => {
+  it('renders filter button', () => {
     render(<FiltersPanel />);
-    expect(screen.getByText('Фильтры')).toBeInTheDocument();
-    expect(screen.getByText('Все спецпроекты')).toBeInTheDocument();
+    const filterButton = screen.getByRole('button');
+    expect(filterButton).toBeInTheDocument();
   });
 
-  it('exports CSV on button click', () => {
+  it('shows filter options when button is clicked', () => {
     render(<FiltersPanel />);
-    const exportButton = screen.getByText('Экспорт в CSV');
-    fireEvent.click(exportButton);
-    expect(saveAs).toHaveBeenCalled();
-    expect(screen.getByText('Файл успешно экспортирован!')).toBeInTheDocument();
+    const filterButton = screen.getByRole('button');
+    fireEvent.click(filterButton);
+    
+    expect(screen.getByText('Фильтры')).toBeInTheDocument();
+    expect(screen.getByText('Проект')).toBeInTheDocument();
+    expect(screen.getByText('Период')).toBeInTheDocument();
+    expect(screen.getByText('Сбросить фильтры')).toBeInTheDocument();
   });
 });

@@ -16,7 +16,7 @@ export async function parseExcelFromPublic(
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(buffer);
 
-    if (workbook.worksheets.length === 0) {
+    if (!workbook.worksheets || workbook.worksheets.length === 0) {
       throw new Error('Excel-файл пустой');
     }
 
@@ -28,9 +28,14 @@ export async function parseExcelFromPublic(
       console.log(`Processing sheet: ${sheet.name}`);
       const jsonData: ExcelJS.CellValue[][] = [];
       sheet.eachRow({ includeEmpty: false }, (row) => {
-        const values = Array.isArray(row.values)
-          ? row.values.slice(1)
-          : Object.values(row.values || {}).slice(1);
+        // Безопасная обработка значений строки
+        const rowValues = row.values;
+        if (!rowValues) return;
+        
+        const values = Array.isArray(rowValues)
+          ? rowValues.slice(1)
+          : Object.values(rowValues || {}).slice(1);
+        
         if (values.every((val: ExcelJS.CellValue) => val === undefined || val === null)) return;
         jsonData.push(values);
       });
