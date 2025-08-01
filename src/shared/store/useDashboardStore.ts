@@ -11,8 +11,8 @@ export const useDashboardStore = create<{
   resetFilters: () => void;
 }>((set) => ({
   selectedProject: '',
-  selectedPeriod: '14.07 - 20.07',
+  selectedPeriod: '',
   setSelectedProject: (project) => set({ selectedProject: project }),
   setSelectedPeriod: (period) => set({ selectedPeriod: period }),
-  resetFilters: () => set({ selectedProject: '', selectedPeriod: '14.07 - 20.07' }),
+  resetFilters: () => set({ selectedProject: '', selectedPeriod: '' }),
 }));

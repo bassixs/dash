@@ -41,8 +41,8 @@ function DashboardPage() {
 
   useEffect(() => {
     if (periods.length > 0 && !selectedPeriod) {
-      console.log('DashboardPage: No period selected, but not setting default');
-      // Не устанавливаем период автоматически, чтобы "Все периоды" работало
+      console.log('DashboardPage: Setting default period to', periods[periods.length - 1]);
+      setSelectedPeriod(periods[periods.length - 1]); // Устанавливаем последний (актуальный) период
     }
   }, [periods, selectedPeriod, setSelectedPeriod]);
 

@@ -58,6 +58,9 @@ export default function FiltersPanel({ onOpenKPISettings }: FiltersPanelProps) {
     sortedPeriods: sortedPeriods,
     displayPeriods: displayPeriods,
     selectedPeriod,
+    selectedProject,
+    onOpenKPISettings: !!onOpenKPISettings,
+    showKPIButton: !!(selectedPeriod && onOpenKPISettings),
     periodsLength: sortedPeriods.length,
     firstPeriod: sortedPeriods[0],
     lastPeriod: sortedPeriods[sortedPeriods.length - 1]
@@ -67,7 +70,7 @@ export default function FiltersPanel({ onOpenKPISettings }: FiltersPanelProps) {
     <div className="fixed top-4 right-4 z-50">
       <div className="flex gap-2">
         {/* Кнопка KPI */}
-        {selectedProject && selectedPeriod && onOpenKPISettings && (
+        {selectedPeriod && onOpenKPISettings && (
           <button
             onClick={onOpenKPISettings}
             className="btn-primary p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"

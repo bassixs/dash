@@ -50,9 +50,50 @@ export default function KPICard() {
 
   const progressPercentages = calculateProgressPercentage(selectedProject, selectedPeriod);
 
-  // Если нет KPI для текущего проекта и периода, не показываем карточку
-  if (!currentKPI || !currentProgress) {
+  // Если нет периода, не показываем карточку
+  if (!selectedPeriod) {
     return null;
+  }
+
+  // Если нет KPI для текущего проекта и периода, показываем сообщение о необходимости установить KPI
+  if (!currentKPI) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Cog6ToothIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            KPI для {selectedProject || 'всех проектов'}
+          </h3>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Для периода <strong>{selectedPeriod}</strong> не установлены KPI
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-500">
+            Нажмите кнопку настроек, чтобы установить цели
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Если нет прогресса, не показываем детали
+  if (!currentProgress) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Cog6ToothIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            KPI для {selectedProject || 'всех проектов'}
+          </h3>
+        </div>
+        <div className="text-center py-4">
+          <p className="text-gray-600 dark:text-gray-400">
+            Загрузка данных прогресса...
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const getProgressColor = (percentage: number) => {
