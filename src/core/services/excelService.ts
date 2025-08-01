@@ -1,9 +1,9 @@
 import ExcelJS from 'exceljs';
+
 import ProjectRecord, { ProjectRecordInterface } from '../models/ProjectRecord';
 
 export async function parseExcelFromPublic(
-  path: string = '/спецпроекты.xlsx',
-  periods: string[] = []
+  path: string = '/спецпроекты.xlsx'
 ): Promise<{ data: ProjectRecordInterface[]; projects: string[] }> {
   console.log('Attempting to fetch Excel file from:', path);
   try {
@@ -26,8 +26,8 @@ export async function parseExcelFromPublic(
 
     workbook.eachSheet((sheet) => {
       console.log(`Processing sheet: ${sheet.name}`);
-      const jsonData: any[] = [];
-      sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+      const jsonData: ExcelJS.CellValue[][] = [];
+      sheet.eachRow({ includeEmpty: false }, (row) => {
         const values = Array.isArray(row.values)
           ? row.values.slice(1)
           : Object.values(row.values || {}).slice(1);
@@ -40,7 +40,7 @@ export async function parseExcelFromPublic(
         return;
       }
 
-      const header = jsonData[0].map((h: string) => h?.toString().toLowerCase().trim() || '');
+      const header = jsonData[0].map((h: ExcelJS.CellValue) => h?.toString().toLowerCase().trim() || '');
       console.log(`Sheet ${sheet.name} headers:`, header);
       
       if (!VALID_HEADERS.every((h, i) => header[i] === h)) {
@@ -53,7 +53,7 @@ export async function parseExcelFromPublic(
 
       console.log(`Processing ${jsonData.length} rows in sheet: ${sheet.name}`);
 
-      jsonData.slice(1).forEach((row: any[], rowIndex: number) => {
+      jsonData.slice(1).forEach((row: ExcelJS.CellValue[], rowIndex: number) => {
         const [period, link, views, si, er] = row;
         
         // Проверяем, что период валидный

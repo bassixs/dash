@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import FiltersPanel from '@features/dashboard/components/FiltersPanel';
 import { useDashboardStore } from '@shared/store/useDashboardStore';

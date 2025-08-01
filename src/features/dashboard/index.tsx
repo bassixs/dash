@@ -1,20 +1,17 @@
 import React, { useMemo, useEffect } from 'react';
+import { ProjectRecordInterface } from '@core/models/ProjectRecord';
+import { sortPeriodsSimple, isValidPeriod, getLastPeriod } from '@shared/utils/periodUtils';
+
+import { useDashboardStore } from '../../shared/store/useDashboardStore';
+
 import { useExcelData } from './hooks/useExcelData';
 import { useFilteredData } from './hooks/useFilteredData';
-import { useDashboardStore } from '../../shared/store/useDashboardStore';
 import StatCard from './components/StatCard';
 import ProgressBar from './components/ProgressBar';
 import FiltersPanel from './components/FiltersPanel';
 import Loading from './components/Loading';
 import ErrorMessage from './components/Error';
 import ErrorBoundary from './components/ErrorBoundary';
-import { ProjectRecordInterface } from '@core/models/ProjectRecord';
-import { sortPeriodsSimple, isValidPeriod, getLastPeriod } from '@shared/utils/periodUtils';
-
-interface ExcelData {
-  data: ProjectRecordInterface[];
-  projects: string[];
-}
 
 function DashboardPage() {
   const { data, isLoading, error } = useExcelData();

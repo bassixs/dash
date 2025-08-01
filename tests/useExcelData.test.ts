@@ -2,7 +2,6 @@ import { renderHook } from '@testing-library/react';
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { useExcelData } from '@features/dashboard/hooks/useExcelData';
 import { describe, it, expect, vi } from 'vitest';
-import { parseExcelFromPublic } from '@core/services/excelService';
 import { ProjectRecordInterface } from '@core/models/ProjectRecord';
 
 // Мокаем useQuery

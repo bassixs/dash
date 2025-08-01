@@ -7,13 +7,12 @@ import FiltersPanel from '@features/dashboard/components/FiltersPanel';
 import Loading from '@features/dashboard/components/Loading';
 import ErrorMessage from '@features/dashboard/components/Error';
 import { ChartOptions } from 'chart.js';
-import { ProjectRecordInterface } from '@core/models/ProjectRecord';
 
 export default function ChartsPage() {
   const { data, isLoading, error } = useExcelData();
-  const { selectedPeriod, selectedProject } = useDashboardStore();
+  const { selectedProject, selectedPeriod } = useDashboardStore();
 
-  // Подготавливаем данные для диаграмм
+  // Перемещаем все хуки в начало компонента
   const projectsViewsChartData = useProjectsChartData(data?.data || [], selectedPeriod, 'views');
   const projectsERChartData = useProjectsChartData(data?.data || [], selectedPeriod, 'er');
   const erChartData = useERChartData(data?.data || [], selectedPeriod);
@@ -37,6 +36,9 @@ export default function ChartsPage() {
 
     return { totalViews, totalSI, avgER, recordCount: filteredData.length };
   }, [data, selectedProject, selectedPeriod]);
+
+  if (isLoading) return <Loading />;
+  if (error) return <ErrorMessage message={error instanceof Error ? error.message : 'Не удалось загрузить данные.'} />;
 
   const chartOptions: ChartOptions<'line'> = {
     responsive: true,
@@ -90,9 +92,6 @@ export default function ChartsPage() {
       }
     }
   };
-
-  if (isLoading) return <Loading />;
-  if (error) return <ErrorMessage message={error instanceof Error ? error.message : 'Неизвестная ошибка'} />;
 
   return (
     <div className="p-4 pb-20">

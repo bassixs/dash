@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
-import { ProjectRecordInterface } from '../../../core/models/ProjectRecord';
 import { ChartData } from 'chart.js';
+
+import { ProjectRecordInterface } from '../../../core/models/ProjectRecord';
 
 /**
  * Хук для подготовки данных диаграмм по проектам

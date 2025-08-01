@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useExcelData } from '../hooks/useExcelData';
-import { useDashboardStore } from '../../../shared/store/useDashboardStore';
 import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { ProjectRecordInterface } from '@core/models/ProjectRecord';
 import { sortPeriodsSimple, isValidPeriod, getPeriodsForDisplay } from '@shared/utils/periodUtils';
+
+import { useExcelData } from '../hooks/useExcelData';
+import { useDashboardStore } from '../../../shared/store/useDashboardStore';
 
 /**
  * Компонент панели фильтров для дашборда
@@ -12,6 +13,20 @@ export default function FiltersPanel() {
   const { data } = useExcelData();
   const { selectedProject, selectedPeriod, setSelectedProject, setSelectedPeriod, resetFilters } = useDashboardStore();
   const [open, setOpen] = useState(false);
+
+  // Перемещаем useEffect в начало компонента
+  useEffect(() => {
+    if (data && data.data.length > 0) {
+      const allPeriods = [...new Set(data.data.map((r: ProjectRecordInterface) => r.period))];
+      const validPeriods = allPeriods.filter(isValidPeriod);
+      const sortedPeriods = sortPeriodsSimple(validPeriods);
+      
+      if (sortedPeriods.length > 0 && !selectedPeriod) {
+        console.log('FiltersPanel: No period selected, but not setting default');
+        // Не устанавливаем период автоматически, чтобы "Все периоды" работало
+      }
+    }
+  }, [data, selectedPeriod, setSelectedPeriod]);
 
   if (!data) return null;
 
@@ -43,14 +58,6 @@ export default function FiltersPanel() {
     firstPeriod: sortedPeriods[0],
     lastPeriod: sortedPeriods[sortedPeriods.length - 1]
   });
-
-  // Устанавливаем последний период как начальный только если нет выбранного периода
-  useEffect(() => {
-    if (sortedPeriods.length > 0 && !selectedPeriod) {
-      console.log('FiltersPanel: No period selected, but not setting default');
-      // Не устанавливаем период автоматически, чтобы "Все периоды" работало
-    }
-  }, [sortedPeriods, selectedPeriod, setSelectedPeriod]);
 
   return (
     <div className="fixed top-4 right-4 z-50">

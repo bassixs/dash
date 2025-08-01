@@ -1,14 +1,16 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { 
-  ChartBarIcon, 
-  HomeIcon, 
-  Cog6ToothIcon 
+import {
+  ChartBarIcon,
+  HomeIcon,
+  Cog6ToothIcon,
+  ChartPieIcon
 } from '@heroicons/react/24/outline';
 
 const navItems = [
   { path: '/', label: 'Дашборд', icon: HomeIcon },
   { path: '/charts', label: 'Графики', icon: ChartBarIcon },
+  { path: '/analytics', label: 'Аналитика', icon: ChartPieIcon },
   { path: '/settings', label: 'Настройки', icon: Cog6ToothIcon },
 ];
 
@@ -24,9 +26,9 @@ export default function Navbar(): React.JSX.Element {
       role="navigation"
       aria-label="Основная навигация"
     >
-      {navItems.map((item, index) => {
+      {navItems.map((item) => {
         const isActive = location.pathname === item.path;
-        
+
         return (
           <NavLink
             key={item.path}
@@ -38,7 +40,7 @@ export default function Navbar(): React.JSX.Element {
           >
             <item.icon className="w-6 h-6" aria-hidden="true" />
             <span className="text-xs">{item.label}</span>
-            
+
             {/* Индикатор выбранного экрана */}
             {isActive && (
               <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-white rounded-full transition-all duration-300" />

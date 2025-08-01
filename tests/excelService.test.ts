@@ -17,14 +17,14 @@ describe('excelService', () => {
 
     // Создаем объект для мока Worksheet
     const mockWorksheet = {
-      eachRow: vi.fn().mockImplementation((cb: (row: any, rowNumber: number) => void) => {
+      eachRow: vi.fn().mockImplementation((cb: (row: ExcelJS.Row, rowNumber: number) => void) => {
         cb(
           {
             values: { 1: 'ссылка', 2: 'просмотры', 3: 'си', 4: 'ер' },
             getCell: (col: number) => ({
               value: ['ссылка', 'просмотры', 'си', 'ер'][col - 1],
             }),
-          },
+          } as unknown as ExcelJS.Row,
           1
         );
       }),
@@ -34,7 +34,7 @@ describe('excelService', () => {
     vi.spyOn(ExcelJS, 'Workbook').mockImplementation(() => ({
       xlsx: mockXlsx,
       getWorksheet: vi.fn().mockReturnValue(mockWorksheet),
-    } as any));
+    } as unknown as ExcelJS.Workbook));
 
     const result = await parseExcelFromPublic('/спецпроекты.xlsx');
     expect(result.data).toEqual([]);
