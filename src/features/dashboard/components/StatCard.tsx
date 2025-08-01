@@ -3,27 +3,26 @@ import React from 'react';
 interface StatCardProps {
   label: string;
   value: string;
-  onClick?: () => void;
   className?: string;
+  onClick?: () => void;
 }
 
-/**
- * Компонент для отображения статистической карточки
- */
-export default function StatCard({ label, value, onClick, className = '' }: StatCardProps) {
+const StatCard: React.FC<StatCardProps> = ({ label, value, className = '', onClick }) => {
   return (
     <div 
-      className={`stat-card card-hover ${className} ${onClick ? 'cursor-pointer' : ''}`}
+      className={`p-4 rounded-xl transition-all duration-300 ${className}`}
       onClick={onClick}
     >
       <div className="text-center">
-        <p className="text-2xl font-bold text-gray-900 dark:text-white animate-fadeIn">
-          {value}
-        </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
           {label}
+        </p>
+        <p className="text-xl font-bold gradient-text">
+          {value}
         </p>
       </div>
     </div>
   );
-}
+};
+
+export default StatCard;
