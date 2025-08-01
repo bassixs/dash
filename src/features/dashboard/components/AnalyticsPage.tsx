@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { ProjectRecordInterface } from '@core/models/ProjectRecord';
 import { sortPeriodsSimple, isValidPeriod, getLastPeriod } from '@shared/utils/periodUtils';
-import { useProjectsChartData, useERChartData, useWeeklyChartData } from '@features/dashboard/hooks/useChartData';
+import { useProjectsChartData, useWeeklyChartData } from '@features/dashboard/hooks/useChartData';
 import { ChartOptions } from 'chart.js';
 
 import { useExcelData } from '../hooks/useExcelData';
@@ -31,8 +31,6 @@ function AnalyticsPage() {
 
   // Данные для графиков
   const projectsViewsChartData = useProjectsChartData(data?.data || [], selectedPeriod, 'views');
-  const projectsERChartData = useProjectsChartData(data?.data || [], selectedPeriod, 'er');
-  const erChartData = useERChartData(data?.data || [], selectedPeriod);
   const weeklyChartData = useWeeklyChartData(data?.data || [], selectedProject, selectedPeriod);
 
   // Определяем, какой тип графика показывать
@@ -157,24 +155,6 @@ function AnalyticsPage() {
                 </div>
               </div>
             )}
-
-            {/* Диаграмма ЕР по проектам */}
-            {shouldShowProjectsChart && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
-                <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Средний ЕР по спецпроектам</h3>
-                <div className="h-80">
-                  <Chart type="doughnut" data={projectsERChartData} options={doughnutOptions} />
-                </div>
-              </div>
-            )}
-
-            {/* Диаграмма распределения по ЕР */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
-              <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Распределение по ЕР</h3>
-              <div className="h-80">
-                <Chart type="doughnut" data={erChartData} options={doughnutOptions} />
-              </div>
-            </div>
 
             {/* График по дням недели */}
             {shouldShowWeeklyChart && (

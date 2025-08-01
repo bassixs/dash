@@ -1,11 +1,13 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { ProjectRecordInterface } from '@core/models/ProjectRecord';
 import { sortPeriodsSimple, getLastPeriod } from '@shared/utils/periodUtils';
+import { ChartOptions } from 'chart.js';
 
 import { useDashboardStore } from '../../shared/store/useDashboardStore';
 
 import { useExcelData } from './hooks/useExcelData';
 import { useFilteredData } from './hooks/useFilteredData';
+import { useProjectsChartData } from './hooks/useChartData';
 import StatCard from './components/StatCard';
 import ProgressBar from './components/ProgressBar';
 import FiltersPanel from './components/FiltersPanel';
@@ -13,6 +15,7 @@ import Loading from './components/Loading';
 import ErrorMessage from './components/Error';
 import ErrorBoundary from './components/ErrorBoundary';
 import TopProjectsModal from './components/TopProjectsModal';
+import Chart from './components/Chart';
 
 export default function Dashboard() {
   const { data, isLoading, error } = useExcelData();
@@ -21,22 +24,29 @@ export default function Dashboard() {
     isOpen: boolean;
     type: 'views' | 'er' | 'si' | 'records' | null;
   }>({ isOpen: false, type: null });
+  
+  // Флаг для отслеживания, был ли уже установлен период
+  const [periodInitialized, setPeriodInitialized] = useState(false);
 
-  // Автоматически устанавливаем последний период при загрузке данных
+  // Автоматически устанавливаем последний период при загрузке данных только один раз
   useEffect(() => {
-    if (data?.data && !selectedPeriod) {
+    if (data?.data && !selectedPeriod && !periodInitialized) {
       const periods = [...new Set(data.data.map(record => record.period))];
       const sortedPeriods = sortPeriodsSimple(periods);
       const lastPeriod = getLastPeriod(sortedPeriods);
       
       if (lastPeriod) {
         setSelectedPeriod(lastPeriod);
+        setPeriodInitialized(true);
       }
     }
-  }, [data, selectedPeriod, setSelectedPeriod]);
+  }, [data, selectedPeriod, setSelectedPeriod, periodInitialized]);
 
   // Используем хук для фильтрации данных
   const filteredData = useFilteredData(data?.data || []);
+
+  // Данные для диаграммы распределения просмотров
+  const projectsViewsChartData = useProjectsChartData(data?.data || [], selectedPeriod, 'views');
 
   // Улучшенный расчет статистики
   const { totalViews, totalSI, avgER, totalLinks } = useMemo(() => {
@@ -97,6 +107,32 @@ export default function Dashboard() {
       period: actualPeriod
     };
   }, [data]);
+
+  // Настройки для doughnut диаграммы
+  const doughnutOptions: ChartOptions<'doughnut'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return `${context.label}: ${context.parsed.toLocaleString()}`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        display: false
+      },
+      y: {
+        display: false
+      }
+    }
+  };
 
   const handleStatCardClick = (type: 'views' | 'er' | 'si' | 'records') => {
     setModalState({ isOpen: true, type });
@@ -164,6 +200,14 @@ export default function Dashboard() {
             />
           </div>
         )}
+
+        {/* Диаграмма распределения просмотров по проектам */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 mb-4">
+          <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Распределение просмотров по спецпроектам</h3>
+          <div className="h-80">
+            <Chart type="doughnut" data={projectsViewsChartData} options={doughnutOptions} />
+          </div>
+        </div>
 
         {/* Модальные окна */}
         <TopProjectsModal
