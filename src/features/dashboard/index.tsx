@@ -81,20 +81,22 @@ export default function Dashboard() {
     };
   }, [filteredData]);
 
-  // Рассчитываем прогресс для выбранного периода
+  // Рассчитываем прогресс для актуального периода (28.07 - 03.08)
   const progressData = useMemo(() => {
-    if (!selectedPeriod) return null;
+    if (!data?.data) return null;
     
-    const selectedPeriodData = data?.data.filter(record => record.period === selectedPeriod) || [];
-    const totalViews = selectedPeriodData.reduce((sum, record) => sum + record.views, 0);
+    // Фиксированный актуальный период
+    const actualPeriod = '28.07 - 03.08';
+    const actualPeriodData = data.data.filter(record => record.period === actualPeriod) || [];
+    const totalViews = actualPeriodData.reduce((sum, record) => sum + record.views, 0);
     const target = 2000000; // 2 миллиона просмотров
     
     return {
       current: totalViews,
       target,
-      period: selectedPeriod
+      period: actualPeriod
     };
-  }, [data, selectedPeriod]);
+  }, [data]);
 
   const handleStatCardClick = (type: 'views' | 'er' | 'si' | 'records') => {
     setModalState({ isOpen: true, type });
@@ -151,7 +153,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Прогресс бар для последнего периода */}
+        {/* Прогресс бар для актуального периода */}
         {progressData && (
           <div className="mb-4">
             <ProgressBar 
