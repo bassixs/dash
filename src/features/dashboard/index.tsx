@@ -64,7 +64,7 @@ export default function Dashboard() {
   }, [data, filteredData, selectedProject, selectedPeriod, currentData]);
 
   // Улучшенный расчет статистики
-  const { totalViews, totalSI, avgER, totalLinks, topProjects } = useMemo(() => {
+  const { totalViews, totalSI, avgER, totalLinks } = useMemo(() => {
     const totalViews = filteredData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.views, 0);
     const totalSI = filteredData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.si, 0);
     
@@ -93,56 +93,35 @@ export default function Dashboard() {
     
     const totalLinks = filteredData.length;
 
-    // Топ проектов по просмотрам
-    const projectStats = filteredData.reduce((acc: { [key: string]: { views: number; si: number; count: number } }, record: ProjectRecordInterface) => {
-      if (!acc[record.project]) {
-        acc[record.project] = { views: 0, si: 0, count: 0 };
-      }
-      acc[record.project].views += record.views;
-      acc[record.project].si += record.si;
-      acc[record.project].count += 1;
-      return acc;
-    }, {});
-
-    const topProjects = Object.entries(projectStats)
-      .map(([project, stats]) => ({
-        project,
-        views: stats.views,
-        avgER: stats.views > 0 ? (stats.si / stats.views) * 100 : 0,
-        count: stats.count
-      }))
-      .sort((a, b) => b.views - a.views)
-      .slice(0, 5);
-
-    return { totalViews, totalSI, avgER, totalLinks, topProjects };
+    return { totalViews, totalSI, avgER, totalLinks };
   }, [filteredData]);
 
   // Получаем последний период для прогресс бара
   const lastPeriod = getLastPeriod(periods);
 
-  // Рассчитываем прогресс для последнего периода
+  // Рассчитываем прогресс для выбранного периода
   const progressData = useMemo(() => {
-    if (!lastPeriod) return null;
+    if (!selectedPeriod) return null;
     
-    const lastPeriodData = data?.data.filter(record => record.period === lastPeriod) || [];
-    const totalViews = lastPeriodData.reduce((sum, record) => sum + record.views, 0);
+    const selectedPeriodData = data?.data.filter(record => record.period === selectedPeriod) || [];
+    const totalViews = selectedPeriodData.reduce((sum, record) => sum + record.views, 0);
     const target = 2000000; // 2 миллиона просмотров
     
     console.log('Progress Bar Debug:', {
-      lastPeriod,
+      selectedPeriod,
       allPeriods: periods,
-      lastPeriodDataLength: lastPeriodData.length,
+      selectedPeriodDataLength: selectedPeriodData.length,
       totalViews,
       target,
-      lastPeriodData: lastPeriodData.slice(0, 3) // Показываем первые 3 записи для отладки
+      selectedPeriodData: selectedPeriodData.slice(0, 3) // Показываем первые 3 записи для отладки
     });
     
     return {
       current: totalViews,
       target,
-      period: lastPeriod
+      period: selectedPeriod
     };
-  }, [data, lastPeriod, periods]);
+  }, [data, selectedPeriod, periods]);
 
   if (isLoading) return <Loading />;
   if (error) return <ErrorMessage message={error instanceof Error ? error.message : 'Не удалось загрузить данные. Попробуйте снова.'} />;
@@ -203,7 +182,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Прогресс бар для последнего периода */}
+        {/* Прогресс бар для выбранного периода */}
         {progressData && (
           <div className="mb-4">
             <ProgressBar 
@@ -215,44 +194,14 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Топ проектов */}
-        {topProjects.length > 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 mb-4">
-            <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Топ проектов по просмотрам</h3>
-            <div className="space-y-3">
-              {topProjects.map((project, index) => (
-                <div key={project.project} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <div className="flex items-center">
-                    <span className="w-6 h-6 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center mr-3">
-                      {index + 1}
-                    </span>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">{project.project}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{project.count} записей</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-gray-900 dark:text-white">
-                      {project.views.toLocaleString()}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      ЕР: {project.avgER}%
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* KPI Summary */}
+        <KPISummary />
 
         {/* Модальное окно настроек KPI */}
         <KPISettings 
           isOpen={isKPISettingsOpen} 
           onClose={() => setIsKPISettingsOpen(false)} 
         />
-
-        {/* KPI Summary - фиксированный внизу */}
-        <KPISummary />
       </div>
     </ErrorBoundary>
   );
