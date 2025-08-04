@@ -27,7 +27,7 @@ const Navbar: React.FC = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex flex-col items-center p-3 rounded-xl transition-all duration-300 ${
+                className={`relative flex flex-col items-center p-3 rounded-xl transition-all duration-300 ${
                   isActive 
                     ? 'bg-white/20 text-white shadow-lg scale-110' 
                     : 'text-white/70 hover:text-white hover:bg-white/10'

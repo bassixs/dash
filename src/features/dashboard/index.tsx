@@ -1,21 +1,23 @@
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { ChartOptions } from 'chart.js';
+import { useDashboardStore } from '@shared/store/useDashboardStore';
 import { ProjectRecordInterface } from '@core/models/ProjectRecord';
 import { sortPeriodsSimple, getLastPeriod } from '@shared/utils/periodUtils';
-import { ChartOptions } from 'chart.js';
-
-import { useDashboardStore } from '../../shared/store/useDashboardStore';
 
 import { useExcelData } from './hooks/useExcelData';
 import { useFilteredData } from './hooks/useFilteredData';
 import { useProjectsChartData } from './hooks/useChartData';
+import FiltersPanel from './components/FiltersPanel';
 import StatCard from './components/StatCard';
 import ProgressBar from './components/ProgressBar';
-import FiltersPanel from './components/FiltersPanel';
+import TopProjectsModal from './components/TopProjectsModal';
+import Chart from './components/Chart';
+import ActivityRings from './components/ActivityRings';
+import PeriodScales from './components/PeriodScales';
+import HealthStats from './components/HealthStats';
 import Loading from './components/Loading';
 import ErrorMessage from './components/Error';
 import ErrorBoundary from './components/ErrorBoundary';
-import TopProjectsModal from './components/TopProjectsModal';
-import Chart from './components/Chart';
 
 export default function Dashboard() {
   const { data, isLoading, error } = useExcelData();
@@ -159,31 +161,59 @@ export default function Dashboard() {
           </p>
         </div>
 
+        {/* Колесо активности в стиле Apple Health */}
+        <div className="mb-8 animate-fade-in-up stagger-1">
+          <div className="card-modern p-6 flex justify-center">
+            <ActivityRings
+              views={totalViews}
+              viewsTarget={2000000}
+            />
+          </div>
+        </div>
+
+        {/* Шкалы по периодам в стиле Apple Health */}
+        <div className="mb-8 animate-fade-in-up stagger-2">
+          <PeriodScales
+            data={data?.data || []}
+            selectedPeriod={selectedPeriod}
+          />
+        </div>
+
+        {/* Детальная статистика в стиле Apple Health */}
+        <div className="mb-8 animate-fade-in-up stagger-3">
+          <HealthStats
+            totalViews={totalViews}
+            totalSI={totalSI}
+            avgER={avgER}
+            totalLinks={totalLinks}
+          />
+        </div>
+
         {/* Основная статистика с неоморфизмом */}
-        <div className="card-modern mb-6 animate-fade-in-up stagger-1">
+        <div className="card-modern mb-6 animate-fade-in-up stagger-4">
           <div className="grid grid-cols-2 gap-4">
-            <StatCard 
-              label="Просмотры" 
-              value={totalViews.toLocaleString()} 
-              onClick={() => handleStatCardClick('views')} 
+            <StatCard
+              label="Просмотры"
+              value={totalViews.toLocaleString()}
+              onClick={() => handleStatCardClick('views')}
               className="neo hover-lift cursor-pointer"
             />
-            <StatCard 
-              label="Средний ЕР" 
-              value={`${avgER}%`} 
-              onClick={() => handleStatCardClick('er')} 
+            <StatCard
+              label="Средний ЕР"
+              value={`${avgER}%`}
+              onClick={() => handleStatCardClick('er')}
               className="neo hover-lift cursor-pointer"
             />
-            <StatCard 
-              label="СИ" 
-              value={totalSI.toLocaleString()} 
-              onClick={() => handleStatCardClick('si')} 
+            <StatCard
+              label="СИ"
+              value={totalSI.toLocaleString()}
+              onClick={() => handleStatCardClick('si')}
               className="neo hover-lift cursor-pointer"
             />
-            <StatCard 
-              label="Записей" 
-              value={totalLinks.toLocaleString()} 
-              onClick={() => handleStatCardClick('records')} 
+            <StatCard
+              label="Записей"
+              value={totalLinks.toLocaleString()}
+              onClick={() => handleStatCardClick('records')}
               className="neo hover-lift cursor-pointer"
             />
           </div>
@@ -191,18 +221,18 @@ export default function Dashboard() {
 
         {/* Прогресс бар для актуального периода */}
         {progressData && (
-          <div className="mb-6 animate-fade-in-up stagger-2">
-            <ProgressBar 
+          <div className="mb-6 animate-fade-in-up stagger-5">
+            <ProgressBar
               current={progressData.current}
               target={progressData.target}
-              label="Прогресс просмотров"
+              label="Прогресс по просмотрам"
               period={progressData.period}
             />
           </div>
         )}
 
         {/* Диаграмма распределения просмотров по проектам */}
-        <div className="card-modern mb-6 animate-fade-in-up stagger-3">
+        <div className="card-modern mb-6 animate-fade-in-up stagger-6">
           <h3 className="text-lg font-semibold mb-4 text-white">Распределение просмотров по спецпроектам</h3>
           <div className="h-80">
             <Chart type="doughnut" data={projectsViewsChartData} options={doughnutOptions} />
@@ -210,37 +240,29 @@ export default function Dashboard() {
         </div>
 
         {/* Модальные окна */}
-        <TopProjectsModal
-          isOpen={modalState.isOpen && modalState.type === 'views'}
-          onClose={closeModal}
-          title="Топ проектов по просмотрам"
-          projects={topProjects.views.map(p => ({ ...p, value: p.views }))}
-          valueFormatter={(value) => value.toLocaleString()}
-        />
-        
-        <TopProjectsModal
-          isOpen={modalState.isOpen && modalState.type === 'er'}
-          onClose={closeModal}
-          title="Топ проектов по ЕР"
-          projects={topProjects.er.map(p => ({ ...p, value: p.avgER }))}
-          valueFormatter={(value) => `${value.toFixed(1)}%`}
-        />
-        
-        <TopProjectsModal
-          isOpen={modalState.isOpen && modalState.type === 'si'}
-          onClose={closeModal}
-          title="Топ проектов по СИ"
-          projects={topProjects.si.map(p => ({ ...p, value: p.si }))}
-          valueFormatter={(value) => value.toLocaleString()}
-        />
-        
-        <TopProjectsModal
-          isOpen={modalState.isOpen && modalState.type === 'records'}
-          onClose={closeModal}
-          title="Топ проектов по количеству записей"
-          projects={topProjects.records.map(p => ({ ...p, value: p.count }))}
-          valueFormatter={(value) => value.toLocaleString()}
-        />
+        {modalState.isOpen && modalState.type && (
+          <TopProjectsModal
+            isOpen={modalState.isOpen}
+            onClose={closeModal}
+            title={
+              modalState.type === 'views' ? 'Топ проектов по просмотрам' :
+              modalState.type === 'si' ? 'Топ проектов по СИ' :
+              modalState.type === 'er' ? 'Топ проектов по ЕР' :
+              'Топ проектов по записям'
+            }
+            projects={
+              modalState.type === 'views' ? topProjects.views.map(p => ({ ...p, value: p.views })) :
+              modalState.type === 'si' ? topProjects.si.map(p => ({ ...p, value: p.si })) :
+              modalState.type === 'er' ? topProjects.er.map(p => ({ ...p, value: p.avgER })) :
+              topProjects.records.map(p => ({ ...p, value: p.count }))
+            }
+            valueFormatter={
+              modalState.type === 'er' ? 
+                (value) => `${value.toFixed(1)}%` :
+                (value) => value.toLocaleString()
+            }
+          />
+        )}
       </div>
     </ErrorBoundary>
   );
