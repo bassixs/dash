@@ -1,16 +1,16 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import DashboardPage from '@features/dashboard';
-import { ChartsPage, SettingsPage, Navbar } from '@features/dashboard/components';
+import Dashboard from '@features/dashboard';
+import { SettingsPage, Navbar, AnalyticsPage } from '@features/dashboard/components';
 import '@shared/styles/global.css';
 
-export default function App() {
+function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 pb-[78px]">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/charts" element={<ChartsPage />} />
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>
         <Navbar />
@@ -18,3 +18,5 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
+export default App;

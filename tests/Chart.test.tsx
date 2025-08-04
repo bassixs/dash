@@ -1,3 +1,4 @@
+import React from 'react';
 import { render } from '@testing-library/react';
 import Chart from '@features/dashboard/components/Chart';
 import { describe, it, expect } from 'vitest';

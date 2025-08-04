@@ -5,6 +5,7 @@ import { TestingLibraryMatchers } from '@testing-library/jest-dom/matchers';
 
 declare global {
   namespace Vi {
-    interface Assertion<T = any> extends TestingLibraryMatchers<T, void> {}
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface Assertion<T = unknown> extends TestingLibraryMatchers<T, void> {}
   }
 }

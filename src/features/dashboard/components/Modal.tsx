@@ -1,7 +1,8 @@
 import React from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import Chart from './Chart';
 import { ChartData, ChartOptions } from 'chart.js';
+
+import Chart from './Chart';
 
 /**
  * Компонент модального окна для отображения графиков.
