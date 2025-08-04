@@ -5,6 +5,7 @@ import ProjectRecord, { ProjectRecordInterface } from '../models/ProjectRecord';
 export async function parseExcelFromPublic(
   path: string = '/спецпроекты.xlsx'
 ): Promise<{ data: ProjectRecordInterface[]; projects: string[] }> {
+  console.log('Attempting to fetch Excel file from:', path);
   try {
     const response = await fetch(path);
     if (!response.ok) {
@@ -24,6 +25,7 @@ export async function parseExcelFromPublic(
     const VALID_HEADERS = ['период', 'ссылка', 'просмотры', 'си', 'ер'].map(h => h.toLowerCase().trim());
 
     workbook.eachSheet((sheet) => {
+      console.log(`Processing sheet: ${sheet.name}`);
       const jsonData: ExcelJS.CellValue[][] = [];
       sheet.eachRow({ includeEmpty: false }, (row) => {
         // Безопасная обработка значений строки
@@ -39,33 +41,54 @@ export async function parseExcelFromPublic(
       });
 
       if (jsonData.length < 1) {
+        console.warn(`No data in sheet: ${sheet.name}`);
         return;
       }
 
       const header = jsonData[0].map((h: ExcelJS.CellValue) => h?.toString().toLowerCase().trim() || '');
+      console.log(`Sheet ${sheet.name} headers:`, header);
       
       if (!VALID_HEADERS.every((h, i) => header[i] === h)) {
+        console.warn('Invalid headers in sheet:', sheet.name, header);
         return;
       }
 
       const records: ProjectRecordInterface[] = [];
       const periodsInSheet: string[] = [];
 
-      jsonData.slice(1).forEach((row: ExcelJS.CellValue[]) => {
+      console.log(`Processing ${jsonData.length} rows in sheet: ${sheet.name}`);
+
+      jsonData.slice(1).forEach((row: ExcelJS.CellValue[], rowIndex: number) => {
         const [period, link, views, si, er] = row;
         
         // Проверяем, что период валидный
         if (!period || typeof period !== 'string' || !period.match(/^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/)) {
+          console.warn(`Invalid period in row ${rowIndex + 1}: "${period}"`);
           return;
         }
 
         // Проверяем, что есть ссылка
         if (!link) {
+          console.warn(`No link in row ${rowIndex + 1}`);
           return;
         }
 
         const trimmedPeriod = period.trim();
         periodsInSheet.push(trimmedPeriod);
+
+        // Отладочная информация для первых 5 записей
+        if (rowIndex < 5) {
+          console.log(`Row ${rowIndex + 1} debug:`, {
+            period: trimmedPeriod,
+            link,
+            views,
+            si,
+            er,
+            erType: typeof er,
+            erNumber: Number(er),
+            isFinite: Number.isFinite(Number(er))
+          });
+        }
 
         const record = new ProjectRecord({
           link: typeof link === 'string' ? link : '',
@@ -79,19 +102,31 @@ export async function parseExcelFromPublic(
         records.push(record);
       });
 
+      console.log(`Sheet ${sheet.name} summary:`, {
+        totalRecords: records.length,
+        periodsFound: periodsInSheet,
+        uniquePeriods: [...new Set(periodsInSheet)],
+        recordsWithPeriods: records.filter(r => r.period).length,
+        recordsWithoutPeriods: records.filter(r => !r.period).length
+      });
+
       if (records.length > 0) {
         allRecords.push(...records);
-        if (!projects.includes(sheet.name)) {
-          projects.push(sheet.name);
-        }
+        projects.push(sheet.name);
       }
     });
 
-    return {
-      data: allRecords,
-      projects: projects.sort()
-    };
+    console.log('Final Excel parsing summary:', { 
+      totalRecords: allRecords.length, 
+      projects: projects.length,
+      allPeriods: [...new Set(allRecords.map(r => r.period))],
+      recordsWithPeriods: allRecords.filter(r => r.period).length,
+      recordsWithoutPeriods: allRecords.filter(r => !r.period).length
+    });
+
+    return { data: allRecords, projects };
   } catch (err) {
-    throw new Error(`Ошибка парсинга Excel: ${err instanceof Error ? err.message : 'Неизвестная ошибка'}`);
+    console.error('Excel parsing error:', err);
+    throw new Error(`Не удалось загрузить файл: ${err instanceof Error ? err.message : 'Неизвестная ошибка'}`);
   }
 }

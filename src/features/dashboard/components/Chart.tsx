@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from 'react';
+import React from 'react';
 import { Bar, Line, Pie, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -57,16 +57,16 @@ type ChartProps = BarChartProps | LineChartProps | PieChartProps | DoughnutChart
  * Универсальный компонент для рендеринга графиков и диаграмм.
  * @param props Пропсы графика: тип, данные и настройки
  */
-const Chart: React.FC<ChartProps> = memo((props) => {
+export default function Chart(props: ChartProps) {
   const { type, data, options } = props;
 
   // Безопасная проверка темной темы с fallback для тестов
-  const isDarkMode = useMemo(() => {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)').matches : false;
-  }, []);
+  const isDarkMode = typeof window !== 'undefined' && 
+    window.matchMedia ? 
+    window.matchMedia('(prefers-color-scheme: dark)').matches : 
+    false;
 
-  const defaultOptions = useMemo(() => ({
+  const defaultOptions = {
     ...options,
     plugins: {
       ...options?.plugins,
@@ -75,74 +75,44 @@ const Chart: React.FC<ChartProps> = memo((props) => {
         labels: {
           ...options?.plugins?.legend?.labels,
           color: isDarkMode ? '#FFFFFF' : '#000000',
-          font: {
-            ...options?.plugins?.legend?.labels?.font,
-            size: 12
-          }
         },
       },
-      tooltip: {
-        ...options?.plugins?.tooltip,
-        backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)',
-        titleColor: isDarkMode ? '#FFFFFF' : '#000000',
-        bodyColor: isDarkMode ? '#FFFFFF' : '#000000',
-      }
     },
     scales: {
       ...options?.scales,
       x: {
         ...options?.scales?.x,
-        ticks: { 
-          color: isDarkMode ? '#FFFFFF' : '#000000',
-          font: { size: 11 }
-        },
+        ticks: { color: isDarkMode ? '#FFFFFF' : '#000000' },
         title: {
           ...options?.scales?.x?.title,
           color: isDarkMode ? '#FFFFFF' : '#000000',
         },
-        grid: {
-          color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-        }
       },
       y: {
         ...options?.scales?.y,
-        ticks: { 
-          color: isDarkMode ? '#FFFFFF' : '#000000',
-          font: { size: 11 }
-        },
+        ticks: { color: isDarkMode ? '#FFFFFF' : '#000000' },
         title: {
           ...options?.scales?.y?.title,
           color: isDarkMode ? '#FFFFFF' : '#000000',
         },
-        grid: {
-          color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-        }
       },
     },
-  }), [options, isDarkMode]);
-
-  const renderChart = () => {
-    switch (type) {
-      case 'bar':
-        return <Bar data={data as ChartData<'bar'>} options={defaultOptions as ChartOptions<'bar'>} />;
-      case 'line':
-        return <Line data={data as ChartData<'line'>} options={defaultOptions as ChartOptions<'line'>} />;
-      case 'pie':
-        return <Pie data={data as ChartData<'pie'>} options={defaultOptions as ChartOptions<'pie'>} />;
-      case 'doughnut':
-        return <Doughnut data={data as ChartData<'doughnut'>} options={defaultOptions as ChartOptions<'doughnut'>} />;
-      default:
-        return null;
-    }
   };
 
   return (
-    <div className="h-64 animate-fade-in-scale">
-      {renderChart()}
+    <div className="h-64">
+      {type === 'bar' && (
+        <Bar data={data as ChartData<'bar'>} options={defaultOptions as ChartOptions<'bar'>} />
+      )}
+      {type === 'line' && (
+        <Line data={data as ChartData<'line'>} options={defaultOptions as ChartOptions<'line'>} />
+      )}
+      {type === 'pie' && (
+        <Pie data={data as ChartData<'pie'>} options={defaultOptions as ChartOptions<'pie'>} />
+      )}
+      {type === 'doughnut' && (
+        <Doughnut data={data as ChartData<'doughnut'>} options={defaultOptions as ChartOptions<'doughnut'>} />
+      )}
     </div>
   );
-});
-
-Chart.displayName = 'Chart';
-
-export default Chart;
+}

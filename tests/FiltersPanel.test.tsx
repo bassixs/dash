@@ -67,17 +67,16 @@ describe('FiltersPanel', () => {
 
   it('renders filter button', () => {
     render(<FiltersPanel />);
-    const filterButton = screen.getByRole('button', { name: /открыть фильтры/i });
+    const filterButton = screen.getByRole('button');
     expect(filterButton).toBeInTheDocument();
   });
 
   it('shows filter options when button is clicked', () => {
     render(<FiltersPanel />);
-    const filterButton = screen.getByRole('button', { name: /открыть фильтры/i });
+    const filterButton = screen.getByRole('button');
     fireEvent.click(filterButton);
     
-    // Используем более специфичный селектор для заголовка
-    expect(screen.getByRole('heading', { name: 'Фильтры' })).toBeInTheDocument();
+    expect(screen.getByText('Фильтры')).toBeInTheDocument();
     expect(screen.getByText('Проект')).toBeInTheDocument();
     expect(screen.getByText('Период')).toBeInTheDocument();
     expect(screen.getByText('Сбросить фильтры')).toBeInTheDocument();

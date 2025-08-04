@@ -1,36 +1,16 @@
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp: {
-        ready: () => void;
-        expand: () => void;
-        close: () => void;
-        MainButton: {
-          text: string;
-          onClick: (callback: () => void) => void;
-          show: () => void;
-          hide: () => void;
-        };
-        BackButton: {
-          onClick: (callback: () => void) => void;
-          show: () => void;
-          hide: () => void;
-        };
-      };
-    };
-  }
-}
+import WebApp from '@twa-dev/sdk';
 
-export function initTelegram() {
-  if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+/**
+ * Инициализирует Telegram WebApp SDK.
+ */
+export function initTelegramSDK() {
+  if (typeof window !== 'undefined' && WebApp) {
     try {
-      window.Telegram.WebApp.ready();
-      window.Telegram.WebApp.expand();
+      WebApp.ready();
+      WebApp.expand();
+      console.log('Telegram SDK initialized');
     } catch (err) {
-      // Логируем ошибку только в development режиме
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Telegram SDK init failed:', err);
-      }
+      console.error('Telegram SDK init failed:', err);
     }
   }
 }
