@@ -1,269 +1,192 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { ChartOptions } from 'chart.js';
 import { useDashboardStore } from '@shared/store/useDashboardStore';
-import { ProjectRecordInterface } from '@core/models/ProjectRecord';
-import { sortPeriodsSimple, getLastPeriod } from '@shared/utils/periodUtils';
+import { sortPeriods } from '@shared/utils/periodUtils';
 
 import { useExcelData } from './hooks/useExcelData';
 import { useFilteredData } from './hooks/useFilteredData';
 import { useProjectsChartData } from './hooks/useChartData';
-import FiltersPanel from './components/FiltersPanel';
+import Navbar from './components/Navbar';
 import StatCard from './components/StatCard';
 import ProgressBar from './components/ProgressBar';
+import FiltersPanel from './components/FiltersPanel';
 import TopProjectsModal from './components/TopProjectsModal';
-import Chart from './components/Chart';
-import ActivityRings from './components/ActivityRings';
-import PeriodScales from './components/PeriodScales';
-import HealthStats from './components/HealthStats';
-import Loading from './components/Loading';
-import ErrorMessage from './components/Error';
 import ErrorBoundary from './components/ErrorBoundary';
+import Chart from './components/Chart';
 
-export default function Dashboard() {
-  const { data, isLoading, error } = useExcelData();
-  const { selectedProject, selectedPeriod, setSelectedPeriod } = useDashboardStore();
-  const [modalState, setModalState] = useState<{
-    isOpen: boolean;
-    type: 'views' | 'er' | 'si' | 'records' | null;
-  }>({ isOpen: false, type: null });
+const Dashboard: React.FC = () => {
+  const { data, error } = useExcelData();
+  const { selectedPeriod, setSelectedPeriod } = useDashboardStore();
   
-  // Флаг для отслеживания, был ли уже установлен период
   const [periodInitialized, setPeriodInitialized] = useState(false);
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    title: '',
+    projects: [],
+    valueFormatter: (value: number) => value.toString()
+  });
 
-  // Автоматически устанавливаем последний период при загрузке данных только один раз
+  // Автоматически устанавливаем последний период при первой загрузке
   useEffect(() => {
-    if (data?.data && !selectedPeriod && !periodInitialized) {
-      const periods = [...new Set(data.data.map(record => record.period))];
-      const sortedPeriods = sortPeriodsSimple(periods);
-      const lastPeriod = getLastPeriod(sortedPeriods);
-      
-      if (lastPeriod) {
-        setSelectedPeriod(lastPeriod);
-        setPeriodInitialized(true);
+    if (data && data.data && data.data.length > 0 && !periodInitialized) {
+      const periods = [...new Set(data.data.map(item => item.period))].filter(Boolean);
+      const sortedPeriods = sortPeriods(periods);
+      if (sortedPeriods.length > 0) {
+        setSelectedPeriod(sortedPeriods[sortedPeriods.length - 1]);
       }
+      setPeriodInitialized(true);
     }
-  }, [data, selectedPeriod, setSelectedPeriod, periodInitialized]);
+  }, [data, periodInitialized, setSelectedPeriod]);
 
   // Используем хук для фильтрации данных
   const filteredData = useFilteredData(data?.data || []);
 
   // Данные для диаграммы распределения просмотров
-  const projectsViewsChartData = useProjectsChartData(data?.data || [], selectedPeriod, 'views');
+  const projectsChartData = useProjectsChartData(data?.data || [], selectedPeriod, 'views');
 
-  // Улучшенный расчет статистики
-  const { totalViews, totalSI, avgER, totalLinks } = useMemo(() => {
-    const totalViews = filteredData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.views, 0);
-    const totalSI = filteredData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.si, 0);
-    
-    // Исправленный расчет ЕР - используем формулу СИ/просмотры * 100
-    const avgER = filteredData.length > 0 && totalViews > 0
-      ? ((totalSI / totalViews) * 100).toFixed(1)
-      : '0.0';
-    
-    const totalLinks = filteredData.length;
-
-    return { totalViews, totalSI, avgER, totalLinks };
-  }, [filteredData]);
-
-  // Рассчитываем топы проектов
-  const topProjects = useMemo(() => {
-    const projectStats = filteredData.reduce((acc: { [key: string]: { views: number; si: number; count: number } }, record: ProjectRecordInterface) => {
-      if (!acc[record.project]) {
-        acc[record.project] = { views: 0, si: 0, count: 0 };
-      }
-      acc[record.project].views += record.views;
-      acc[record.project].si += record.si;
-      acc[record.project].count += 1;
-      return acc;
-    }, {});
-
-    const projects = Object.entries(projectStats).map(([project, stats]) => ({
-      project,
-      views: stats.views,
-      si: stats.si,
-      count: stats.count,
-      avgER: stats.views > 0 ? (stats.si / stats.views) * 100 : 0
-    }));
-
-    return {
-      views: projects.sort((a, b) => b.views - a.views).slice(0, 5),
-      si: projects.sort((a, b) => b.si - a.si).slice(0, 5),
-      records: projects.sort((a, b) => b.count - a.count).slice(0, 5),
-      er: projects.filter(p => p.avgER > 0).sort((a, b) => b.avgER - a.avgER).slice(0, 5)
-    };
-  }, [filteredData]);
-
-  // Рассчитываем прогресс для актуального периода (28.07 - 03.08)
+  // Прогресс бар всегда показывает данные для актуального периода
   const progressData = useMemo(() => {
-    if (!data?.data) return null;
+    if (!data?.data) return { current: 0, target: 100 };
     
-    // Фиксированный актуальный период
     const actualPeriod = '28.07 - 03.08';
-    const actualPeriodData = data.data.filter(record => record.period === actualPeriod) || [];
-    const totalViews = actualPeriodData.reduce((sum, record) => sum + record.views, 0);
-    const target = 2000000; // 2 миллиона просмотров
+    const periodData = data.data.filter(item => item.period === actualPeriod);
+    
+    const totalViews = periodData.reduce((sum, item) => sum + item.views, 0);
+    const avgViews = periodData.length > 0 ? totalViews / periodData.length : 0;
     
     return {
-      current: totalViews,
-      target,
-      period: actualPeriod
+      current: avgViews,
+      target: 1000 // Целевое значение
     };
   }, [data]);
 
-  // Настройки для doughnut диаграммы
+  // Статистика для карточек
+  const stats = useMemo(() => {
+    if (!filteredData) return { totalViews: 0, avgSI: 0, avgER: 0, totalRecords: 0 };
+
+    const totalViews = filteredData.reduce((sum, item) => sum + item.views, 0);
+    const totalSI = filteredData.reduce((sum, item) => sum + item.si, 0);
+    const totalER = filteredData.reduce((sum, item) => sum + item.er, 0);
+    const recordCount = filteredData.length;
+
+    return {
+      totalViews,
+      avgSI: recordCount > 0 ? totalSI / recordCount : 0,
+      avgER: recordCount > 0 ? totalER / recordCount : 0,
+      totalRecords: recordCount
+    };
+  }, [filteredData]);
+
   const doughnutOptions: ChartOptions<'doughnut'> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: false
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context) {
-            return `${context.label}: ${context.parsed.toLocaleString()}`;
+        position: 'bottom' as const,
+        labels: {
+          color: '#374151',
+          font: {
+            size: 12
           }
         }
-      }
-    },
-    scales: {
-      x: {
-        display: false
-      },
-      y: {
-        display: false
       }
     }
   };
 
-  const handleStatCardClick = (type: 'views' | 'er' | 'si' | 'records') => {
-    setModalState({ isOpen: true, type });
-  };
-
-  const closeModal = () => {
-    setModalState({ isOpen: false, type: null });
-  };
-
-  if (isLoading) return <Loading />;
-  if (error) return <ErrorMessage message={error instanceof Error ? error.message : 'Не удалось загрузить данные. Попробуйте снова.'} />;
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <div className="max-w-4xl mx-auto">
+          <ErrorBoundary>
+            <div className="text-center py-8">
+              <h2 className="text-2xl font-bold text-red-600 mb-4">Ошибка загрузки данных</h2>
+              <p className="text-gray-600">{error instanceof Error ? error.message : String(error)}</p>
+            </div>
+          </ErrorBoundary>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <ErrorBoundary>
-      <div className="p-4 pb-20">
-        <FiltersPanel />
-        
-        {/* Заголовок с градиентным текстом */}
-        <div className="text-center mb-8 animate-fade-in-up">
-          <h1 className="text-3xl font-bold gradient-text mb-2">Аналитика спецпроектов</h1>
-          <p className="text-sm text-white/80 mt-1">
-            {selectedPeriod || 'Все периоды'}
-            {selectedProject && ` • ${selectedProject}`}
-          </p>
-        </div>
-
-        {/* Колесо активности в стиле Apple Health */}
-        <div className="mb-8 animate-fade-in-up stagger-1">
-          <div className="card-modern p-6 flex justify-center">
-            <ActivityRings
-              views={totalViews}
-              viewsTarget={2000000}
-            />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 pb-20">
+      <div className="max-w-4xl mx-auto">
+        <ErrorBoundary>
+          {/* Заголовок */}
+          <div className="text-center mb-8 animate-fade-in-up">
+            <h1 className="text-4xl font-bold gradient-text mb-2">
+              Аналитика проектов
+            </h1>
+            <p className="text-gray-600">
+              Мониторинг эффективности и прогресса
+            </p>
           </div>
-        </div>
 
-        {/* Шкалы по периодам в стиле Apple Health */}
-        <div className="mb-8 animate-fade-in-up stagger-2">
-          <PeriodScales
-            data={data?.data || []}
-            selectedPeriod={selectedPeriod}
-          />
-        </div>
+          {/* Фильтры */}
+          <div className="mb-6 animate-fade-in-up stagger-1">
+            <FiltersPanel />
+          </div>
 
-        {/* Детальная статистика в стиле Apple Health */}
-        <div className="mb-8 animate-fade-in-up stagger-3">
-          <HealthStats
-            totalViews={totalViews}
-            totalSI={totalSI}
-            avgER={avgER}
-            totalLinks={totalLinks}
-          />
-        </div>
-
-        {/* Основная статистика с неоморфизмом */}
-        <div className="card-modern mb-6 animate-fade-in-up stagger-4">
-          <div className="grid grid-cols-2 gap-4">
+          {/* Статистические карточки */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-fade-in-up stagger-2">
             <StatCard
-              label="Просмотры"
-              value={totalViews.toLocaleString()}
-              onClick={() => handleStatCardClick('views')}
-              className="neo hover-lift cursor-pointer"
+              label="Всего просмотров"
+              value={stats.totalViews.toLocaleString()}
             />
             <StatCard
-              label="Средний ЕР"
-              value={`${avgER}%`}
-              onClick={() => handleStatCardClick('er')}
-              className="neo hover-lift cursor-pointer"
+              label="Средний SI"
+              value={stats.avgSI.toFixed(2)}
             />
             <StatCard
-              label="СИ"
-              value={totalSI.toLocaleString()}
-              onClick={() => handleStatCardClick('si')}
-              className="neo hover-lift cursor-pointer"
+              label="Средний ER"
+              value={stats.avgER.toFixed(2)}
             />
             <StatCard
               label="Записей"
-              value={totalLinks.toLocaleString()}
-              onClick={() => handleStatCardClick('records')}
-              className="neo hover-lift cursor-pointer"
+              value={stats.totalRecords.toString()}
             />
           </div>
-        </div>
 
-        {/* Прогресс бар для актуального периода */}
-        {progressData && (
-          <div className="mb-6 animate-fade-in-up stagger-5">
+          {/* Прогресс бар */}
+          <div className="mb-8 animate-fade-in-up stagger-3">
             <ProgressBar
               current={progressData.current}
               target={progressData.target}
               label="Прогресс по просмотрам"
-              period={progressData.period}
+              period="28.07 - 03.08"
             />
           </div>
-        )}
 
-        {/* Диаграмма распределения просмотров по проектам */}
-        <div className="card-modern mb-6 animate-fade-in-up stagger-6">
-          <h3 className="text-lg font-semibold mb-4 text-white">Распределение просмотров по спецпроектам</h3>
-          <div className="h-80">
-            <Chart type="doughnut" data={projectsViewsChartData} options={doughnutOptions} />
+          {/* График распределения просмотров */}
+          <div className="card-modern neo p-6 mb-8 animate-fade-in-up stagger-4">
+            <h3 className="text-xl font-semibold gradient-text mb-4">
+              Распределение просмотров по проектам
+            </h3>
+            <div className="h-64">
+              <Chart
+                type="doughnut"
+                data={projectsChartData}
+                options={doughnutOptions}
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Модальные окна */}
-        {modalState.isOpen && modalState.type && (
-          <TopProjectsModal
-            isOpen={modalState.isOpen}
-            onClose={closeModal}
-            title={
-              modalState.type === 'views' ? 'Топ проектов по просмотрам' :
-              modalState.type === 'si' ? 'Топ проектов по СИ' :
-              modalState.type === 'er' ? 'Топ проектов по ЕР' :
-              'Топ проектов по записям'
-            }
-            projects={
-              modalState.type === 'views' ? topProjects.views.map(p => ({ ...p, value: p.views })) :
-              modalState.type === 'si' ? topProjects.si.map(p => ({ ...p, value: p.si })) :
-              modalState.type === 'er' ? topProjects.er.map(p => ({ ...p, value: p.avgER })) :
-              topProjects.records.map(p => ({ ...p, value: p.count }))
-            }
-            valueFormatter={
-              modalState.type === 'er' ? 
-                (value) => `${value.toFixed(1)}%` :
-                (value) => value.toLocaleString()
-            }
-          />
-        )}
+          {/* Модальное окно для топ проектов */}
+          {modalState.isOpen && (
+            <TopProjectsModal
+              isOpen={modalState.isOpen}
+              title={modalState.title}
+              projects={modalState.projects}
+              valueFormatter={modalState.valueFormatter}
+              onClose={() => setModalState({ isOpen: false, title: '', projects: [], valueFormatter: (value: number) => value.toString() })}
+            />
+          )}
+        </ErrorBoundary>
       </div>
-    </ErrorBoundary>
+      
+      <Navbar />
+    </div>
   );
-}
+};
+
+export default Dashboard;
