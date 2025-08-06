@@ -91,20 +91,26 @@ export default function Dashboard() {
     };
   }, [filteredData]);
 
-  // Рассчитываем прогресс для актуального периода (28.07 - 03.08)
+  // Рассчитываем прогресс для последнего периода
   const progressData = useMemo(() => {
     if (!data?.data) return null;
     
-    // Фиксированный актуальный период
-    const actualPeriod = '28.07 - 03.08';
-    const actualPeriodData = data.data.filter(record => record.period === actualPeriod) || [];
-    const totalViews = actualPeriodData.reduce((sum, record) => sum + record.views, 0);
+    // Получаем все периоды и находим последний
+    const periods = [...new Set(data.data.map(record => record.period))];
+    const sortedPeriods = sortPeriodsSimple(periods);
+    const lastPeriod = getLastPeriod(sortedPeriods);
+    
+    if (!lastPeriod) return null;
+    
+    // Фильтруем данные по последнему периоду
+    const lastPeriodData = data.data.filter(record => record.period === lastPeriod) || [];
+    const totalViews = lastPeriodData.reduce((sum, record) => sum + record.views, 0);
     const target = 2000000; // 2 миллиона просмотров
     
     return {
       current: totalViews,
       target,
-      period: actualPeriod
+      period: lastPeriod
     };
   }, [data]);
 
