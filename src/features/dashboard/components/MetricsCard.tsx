@@ -20,11 +20,11 @@ export default function MetricsCard({ title, value, trend, description, classNam
   const getTrendIcon = () => {
     switch (trend) {
       case 'up':
-        return <ArrowUpIcon className="w-5 h-5 text-green-500" />;
+        return <ArrowUpIcon className="w-4 h-4 text-green-500" />;
       case 'down':
-        return <ArrowDownIcon className="w-5 h-5 text-red-500" />;
+        return <ArrowDownIcon className="w-4 h-4 text-red-500" />;
       case 'stable':
-        return <MinusIcon className="w-5 h-5 text-gray-500" />;
+        return <MinusIcon className="w-4 h-4 text-gray-500" />;
       default:
         return null;
     }
@@ -33,22 +33,22 @@ export default function MetricsCard({ title, value, trend, description, classNam
   const getTrendColor = () => {
     switch (trend) {
       case 'up':
-        return 'text-green-600 dark:text-green-400';
+        return 'text-green-600';
       case 'down':
-        return 'text-red-600 dark:text-red-400';
+        return 'text-red-600';
       case 'stable':
-        return 'text-gray-600 dark:text-gray-400';
+        return 'text-gray-600';
       default:
-        return 'text-gray-600 dark:text-gray-400';
+        return 'text-gray-600';
     }
   };
 
   return (
-    <div className={`stat-card light dark:dark card-hover p-6 transition-all duration-300 ${className} ${
+    <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 transition-all duration-300 hover:shadow-md ${className} ${
       isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-2'
     }`}>
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+      <div className="flex items-center justify-between mb-2">
+        <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">
           {title}
         </h4>
         <div className="flex items-center space-x-1">
@@ -56,13 +56,13 @@ export default function MetricsCard({ title, value, trend, description, classNam
         </div>
       </div>
       
-      <div className="mb-2">
-        <span className={`text-2xl font-bold ${getTrendColor()}`}>
+      <div className="mb-1">
+        <span className={`text-xl font-bold ${getTrendColor()}`}>
           {value}
         </span>
       </div>
       
-      <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+      <p className="text-xs text-gray-500 dark:text-gray-400">
         {description}
       </p>
     </div>
