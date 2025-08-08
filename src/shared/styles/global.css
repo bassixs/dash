@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Импорт шрифтов */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 /* Базовый стиль */
 html {
   font-family: 'Inter', sans-serif;
@@ -9,54 +12,48 @@ html {
 }
 
 body {
-  @apply bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white;
+  @apply bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-white;
+  background-attachment: fixed;
+}
+
+/* Стеклоформизм эффекты */
+.glass {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+.glass-dark {
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 8px 32px 0 rgba(31, 38, 135, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.glass-card-dark {
+  background: rgba(31, 41, 55, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* CSS анимации */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes scaleIn {
-  from {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(200px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out;
-}
-
-.animate-scaleIn {
-  animation: scaleIn 0.3s ease-out;
-}
-
-.animate-slideIn {
-  animation: slideIn 0.3s ease-out;
-}
-
-/* Кастомные анимации */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -90,12 +87,21 @@ body {
   }
 }
 
-@keyframes pulse {
+@keyframes float {
   0%, 100% {
-    opacity: 1;
+    transform: translateY(0px);
   }
   50% {
-    opacity: 0.5;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
   }
 }
 
@@ -110,36 +116,42 @@ body {
 
 /* Применение анимаций */
 .animate-fadeIn {
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.4s ease-out;
 }
 
 .animate-scaleIn {
-  animation: scaleIn 0.2s ease-out;
+  animation: scaleIn 0.3s ease-out;
 }
 
 .animate-slideIn {
-  animation: slideIn 0.3s ease-out;
+  animation: slideIn 0.4s ease-out;
 }
 
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite alternate;
 }
 
 /* Skeleton loading */
 .skeleton {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 25%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.1) 75%);
   background-size: 200px 100%;
   animation: shimmer 1.5s infinite;
 }
 
 /* Улучшенные hover эффекты */
 .hover-lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.1),
+    0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 /* Плавные переходы */
@@ -149,40 +161,50 @@ body {
 
 /* Улучшенные кнопки */
 .btn-primary {
-  @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 hover:shadow-lg active:scale-95;
+  @apply bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg active:scale-95;
+  box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.4);
 }
 
 .btn-secondary {
-  @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-all duration-200 hover:shadow-md active:scale-95;
+  @apply bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-800 font-medium py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-md active:scale-95;
+  box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.1);
 }
 
 /* Улучшенные карточки */
 .card {
-  @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 dark:border-gray-700;
+  @apply rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300;
+}
+
+.card.light {
+  @apply glass-card;
+}
+
+.card.dark {
+  @apply glass-card-dark;
 }
 
 .card-hover {
-  @apply hover:shadow-lg hover:-translate-y-1 transition-all duration-200;
+  @apply hover:shadow-2xl hover:-translate-y-2 transition-all duration-300;
 }
 
 /* Улучшенные инпуты */
 .input {
-  @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white;
+  @apply w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-gray-900 dark:text-white;
 }
 
 /* Улучшенные селекты */
 .select {
-  @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white;
+  @apply w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-gray-900 dark:text-white;
 }
 
 /* Прогресс бар анимации */
 .progress-bar {
-  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Улучшенная навигация */
 .nav-item {
-  @apply flex flex-col items-center p-2 text-white transition-all duration-200 relative;
+  @apply flex flex-col items-center p-3 text-white transition-all duration-300 relative;
 }
 
 .nav-item:hover {
@@ -200,16 +222,32 @@ body {
 
 /* Улучшенные модальные окна */
 .modal-overlay {
-  @apply fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300;
+  @apply fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300;
 }
 
 .modal-content {
-  @apply bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-md mx-auto mt-20 transform transition-all duration-300;
+  @apply rounded-2xl shadow-2xl p-6 max-w-md mx-auto mt-20 transform transition-all duration-300;
+}
+
+.modal-content.light {
+  @apply glass-card;
+}
+
+.modal-content.dark {
+  @apply glass-card-dark;
 }
 
 /* Улучшенные уведомления */
 .notification {
-  @apply fixed top-4 right-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 border-l-4 border-green-500 animate-fadeIn;
+  @apply fixed top-4 right-4 rounded-xl shadow-lg p-4 border-l-4 border-green-500 animate-fadeIn;
+}
+
+.notification.light {
+  @apply glass-card;
+}
+
+.notification.dark {
+  @apply glass-card-dark;
 }
 
 /* Улучшенные таблицы */
@@ -218,40 +256,40 @@ body {
 }
 
 .table th {
-  @apply bg-gray-50 dark:bg-gray-700 text-left p-3 font-medium text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600;
+  @apply bg-white/50 dark:bg-gray-800/50 text-left p-4 font-medium text-gray-900 dark:text-white border-b border-gray-200/50 dark:border-gray-600/50 backdrop-blur-sm;
 }
 
 .table td {
-  @apply p-3 border-b border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300;
+  @apply p-4 border-b border-gray-200/50 dark:border-gray-600/50 text-gray-700 dark:text-gray-300;
 }
 
 .table tr:hover {
-  @apply bg-gray-50 dark:bg-gray-700 transition-colors duration-150;
+  @apply bg-white/30 dark:bg-gray-700/30 transition-colors duration-150;
 }
 
 /* Темная тема улучшения */
 @media (prefers-color-scheme: dark) {
   .card {
-    @apply bg-gray-800 border-gray-700;
+    @apply glass-card-dark;
   }
   
   .input, .select {
-    @apply bg-gray-700 border-gray-600 text-white;
+    @apply bg-gray-800/80 border-gray-600 text-white;
   }
 }
 
 /* Мобильные улучшения */
 @media (max-width: 768px) {
   .card {
-    @apply rounded-lg;
+    @apply rounded-xl;
   }
   
   .btn-primary, .btn-secondary {
-    @apply py-3 px-6 text-base;
+    @apply py-4 px-8 text-base;
   }
   
   .nav-item {
-    @apply p-3;
+    @apply p-4;
   }
 }
 
@@ -262,21 +300,37 @@ body {
 
 /* Улучшенные фильтры */
 .filter-panel {
-  @apply bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 animate-slideIn;
+  @apply rounded-2xl shadow-xl p-6 border border-white/20 dark:border-gray-600/20 animate-slideIn;
+}
+
+.filter-panel.light {
+  @apply glass-card;
+}
+
+.filter-panel.dark {
+  @apply glass-card-dark;
 }
 
 /* Улучшенные статистические карточки */
 .stat-card {
-  @apply bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 dark:border-gray-700;
+  @apply rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-white/30 dark:border-gray-600/30;
+}
+
+.stat-card.light {
+  @apply glass-card;
+}
+
+.stat-card.dark {
+  @apply glass-card-dark;
 }
 
 .stat-card:hover {
-  @apply transform -translate-y-1 shadow-lg;
+  @apply transform -translate-y-2 shadow-2xl;
 }
 
 /* Улучшенные иконки */
 .icon {
-  @apply transition-all duration-200;
+  @apply transition-all duration-300;
 }
 
 .icon:hover {
@@ -285,17 +339,17 @@ body {
 
 /* Улучшенные загрузочные состояния */
 .loading-spinner {
-  @apply animate-spin rounded-full border-4 border-gray-200 border-t-blue-600;
+  @apply animate-spin rounded-full border-4 border-white/20 border-t-blue-500;
 }
 
 /* Улучшенные ошибки */
 .error-message {
-  @apply bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg animate-fadeIn;
+  @apply bg-red-50/80 dark:bg-red-900/20 border border-red-200/50 dark:border-red-800/50 text-red-800 dark:text-red-200 px-4 py-3 rounded-xl animate-fadeIn backdrop-blur-sm;
 }
 
 /* Улучшенные успешные сообщения */
 .success-message {
-  @apply bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-4 py-3 rounded-lg animate-fadeIn;
+  @apply bg-green-50/80 dark:bg-green-900/20 border border-green-200/50 dark:border-green-800/50 text-green-800 dark:text-green-200 px-4 py-3 rounded-xl animate-fadeIn backdrop-blur-sm;
 }
 
 /* Анимации для прогресс бара */
@@ -330,5 +384,50 @@ body {
 
 .progress-dot.active {
   @apply scale-125;
+}
+
+/* Градиентные фоны для карточек */
+.gradient-blue {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%);
+}
+
+.gradient-green {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+}
+
+.gradient-purple {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+}
+
+.gradient-orange {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%);
+}
+
+/* Эффект свечения для активных элементов */
+.glow-effect {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+.glow-effect:hover {
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+}
+
+/* Улучшенные скроллбары */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.7);
 }
 

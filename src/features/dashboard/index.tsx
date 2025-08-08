@@ -153,51 +153,53 @@ export default function Dashboard() {
 
   return (
     <ErrorBoundary>
-      <div className="p-4 pb-20">
+      <div className="p-6 pb-24 min-h-screen">
         <FiltersPanel />
         
         {/* Заголовок */}
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Аналитика спецпроектов</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        <div className="text-center mb-8 animate-fadeIn">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text text-transparent">
+            Аналитика спецпроектов
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 font-medium">
             {selectedPeriod || 'Все периоды'}
             {selectedProject && ` • ${selectedProject}`}
           </p>
         </div>
 
         {/* Основная статистика */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 mb-4">
+        <div className="card light dark:dark p-6 mb-6 animate-scaleIn">
           <div className="grid grid-cols-2 gap-4">
             <StatCard 
               label="Просмотры" 
               value={totalViews.toLocaleString()} 
               onClick={() => handleStatCardClick('views')} 
-              className="bg-blue-50 dark:bg-blue-900/20 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30"
+              className="gradient-blue"
             />
             <StatCard 
               label="Средний ЕР" 
               value={`${avgER}%`} 
               onClick={() => handleStatCardClick('er')} 
-              className="bg-green-50 dark:bg-green-900/20 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/30"
+              className="gradient-green"
             />
             <StatCard 
               label="СИ" 
               value={totalSI.toLocaleString()} 
               onClick={() => handleStatCardClick('si')} 
-              className="bg-purple-50 dark:bg-purple-900/20 cursor-pointer hover:bg-purple-100 dark:hover:bg-purple-900/30"
+              className="gradient-purple"
             />
             <StatCard 
               label="Записей" 
               value={totalLinks.toLocaleString()} 
               onClick={() => handleStatCardClick('records')} 
-              className="bg-orange-50 dark:bg-orange-900/20 cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-900/30"
+              className="gradient-orange"
             />
           </div>
         </div>
 
         {/* Прогресс бар для актуального периода */}
         {progressData && (
-          <div className="mb-4">
+          <div className="mb-6 animate-fadeIn">
             <ProgressBar 
               current={progressData.current}
               target={progressData.target}
@@ -208,8 +210,10 @@ export default function Dashboard() {
         )}
 
         {/* Диаграмма распределения просмотров по проектам */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 mb-4">
-          <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Распределение просмотров по спецпроектам</h3>
+        <div className="card light dark:dark p-6 mb-6 animate-fadeIn">
+          <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+            Распределение просмотров по спецпроектам
+          </h3>
           <div className="h-80">
             <Chart type="doughnut" data={projectsViewsChartData} options={doughnutOptions} />
           </div>

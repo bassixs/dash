@@ -82,43 +82,51 @@ function AnalyticsPage() {
 
   return (
     <ErrorBoundary>
-      <div className="p-4 pb-20">
+      <div className="p-6 pb-24 min-h-screen">
         <FiltersPanel />
         
         {/* Заголовок */}
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Аналитика</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        <div className="text-center mb-8 animate-fadeIn">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text text-transparent">
+            Аналитика
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 font-medium">
             Графики, тренды и прогнозы
           </p>
         </div>
 
         {/* Статистика */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 mb-4">
-          <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Общая статистика</h3>
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.totalViews.toLocaleString()}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Просмотры</p>
+        <div className="card light dark:dark p-6 mb-6 animate-scaleIn">
+          <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Общая статистика</h3>
+          <div className="grid grid-cols-3 gap-6 text-center">
+            <div className="glass-card dark:glass-card-dark p-4 rounded-xl">
+              <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+                {stats.totalViews.toLocaleString()}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Просмотры</p>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.totalSI.toLocaleString()}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">СИ</p>
+            <div className="glass-card dark:glass-card-dark p-4 rounded-xl">
+              <p className="text-3xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
+                {stats.totalSI.toLocaleString()}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">СИ</p>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.recordCount}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Записей</p>
+            <div className="glass-card dark:glass-card-dark p-4 rounded-xl">
+              <p className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent">
+                {stats.recordCount}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Записей</p>
             </div>
           </div>
         </div>
         
         {/* График по дням недели */}
         {shouldShowWeeklyChart && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 mb-6">
-            <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">
+          <div className="card light dark:dark p-6 mb-6 animate-fadeIn">
+            <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
               Динамика для {selectedProject}
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 font-medium">
               Период: {selectedPeriod}
             </p>
             <div className="h-80">
@@ -132,8 +140,8 @@ function AnalyticsPage() {
         )}
 
         {/* Секция трендов роста */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+        <div className="mb-6 animate-fadeIn">
+          <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
             📈 Тренды роста просмотров
           </h3>
           <TrendChart 
@@ -144,8 +152,8 @@ function AnalyticsPage() {
         </div>
 
         {/* Секция сравнения периодов */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+        <div className="mb-6 animate-fadeIn">
+          <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
             📊 Сравнение периодов
           </h3>
           <PeriodComparison 
@@ -157,8 +165,8 @@ function AnalyticsPage() {
         </div>
 
         {/* Секция прогнозирования */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+        <div className="mb-6 animate-fadeIn">
+          <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
             🔮 Прогнозирование
           </h3>
           <ForecastPanel 
@@ -169,8 +177,8 @@ function AnalyticsPage() {
         </div>
 
         {/* Дополнительные метрики */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+        <div className="mb-6 animate-fadeIn">
+          <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
             📋 Ключевые метрики
           </h3>
           <div className="grid grid-cols-2 gap-4">
@@ -179,28 +187,28 @@ function AnalyticsPage() {
               value="+12.5%"
               trend="up"
               description="За последние 3 периода"
-              className="bg-green-50 dark:bg-green-900/20"
+              className="gradient-green"
             />
             <MetricsCard 
               title="Стабильность"
               value="85%"
               trend="stable"
               description="Коэффициент вариации"
-              className="bg-blue-50 dark:bg-blue-900/20"
+              className="gradient-blue"
             />
             <MetricsCard 
               title="Прогноз точности"
               value="92%"
               trend="up"
               description="R² коэффициент"
-              className="bg-purple-50 dark:bg-purple-900/20"
+              className="gradient-purple"
             />
             <MetricsCard 
               title="Аномалии"
               value="2"
               trend="down"
               description="За текущий период"
-              className="bg-orange-50 dark:bg-orange-900/20"
+              className="gradient-orange"
             />
           </div>
         </div>
