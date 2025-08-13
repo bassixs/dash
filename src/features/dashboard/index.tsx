@@ -1,9 +1,8 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { ProjectRecordInterface } from '@core/models/ProjectRecord';
-import { sortPeriodsSimple, getLastPeriod } from '@shared/utils/periodUtils';
 import { ChartOptions } from 'chart.js';
-
+import { ProjectRecordInterface } from '@core/models/ProjectRecord';
 import { useDashboardStore } from '@shared/store/useDashboardStore';
+import { sortPeriodsSimple, getLastPeriod } from '@shared/utils/periodUtils';
 
 import { useExcelData } from './hooks/useExcelData';
 import { useFilteredData } from './hooks/useFilteredData';
@@ -19,7 +18,7 @@ import Chart from './components/Chart';
 
 export default function Dashboard() {
   const { data, isLoading, error } = useExcelData();
-  const { selectedProject, selectedPeriod, setSelectedPeriod, setSelectedProject } = useDashboardStore();
+  const { selectedProject, selectedPeriod, setSelectedPeriod } = useDashboardStore();
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     type: 'views' | 'er' | 'si' | 'records' | null;

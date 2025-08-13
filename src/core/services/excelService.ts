@@ -5,9 +5,18 @@ import ProjectRecord, { ProjectRecordInterface } from '../models/ProjectRecord';
 export async function parseExcelFromPublic(
   path: string = '/спецпроекты.xlsx'
 ): Promise<{ data: ProjectRecordInterface[]; projects: string[] }> {
-  console.log('Attempting to fetch Excel file from:', path);
+  // Добавляем timestamp для предотвращения кэширования
+  const timestamp = Date.now();
+  const urlWithTimestamp = `${path}?v=${timestamp}`;
+  console.log('Attempting to fetch Excel file from:', urlWithTimestamp);
   try {
-    const response = await fetch(path);
+    const response = await fetch(urlWithTimestamp, {
+      cache: 'no-cache', // Принудительно отключаем кэш
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    });
     if (!response.ok) {
       throw new Error(`Ошибка сети: ${response.status} ${response.statusText}`);
     }

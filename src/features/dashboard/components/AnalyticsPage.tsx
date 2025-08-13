@@ -1,11 +1,15 @@
 import React, { useMemo } from 'react';
+import { ChartOptions } from 'chart.js';
 import { ProjectRecordInterface } from '@core/models/ProjectRecord';
+import { useDashboardStore } from '@shared/store/useDashboardStore';
 import { sortPeriodsSimple, isValidPeriod, getLastPeriod } from '@shared/utils/periodUtils';
 import { useWeeklyChartData } from '@features/dashboard/hooks/useChartData';
-import { ChartOptions } from 'chart.js';
-import { useDashboardStore } from '@shared/store/useDashboardStore';
+import { useExcelData, useRefreshExcelData } from '@features/dashboard/hooks/useExcelData';
 
-import { useExcelData } from '@features/dashboard/hooks/useExcelData';
+interface ExcelData {
+  data: ProjectRecordInterface[];
+  projects: string[];
+}
 
 import Loading from './Loading';
 import ErrorMessage from './Error';
@@ -18,13 +22,14 @@ import MetricsCard from './MetricsCard';
 import FiltersPanel from './FiltersPanel';
 
 function AnalyticsPage() {
-  const { data, isLoading, error } = useExcelData();
+  const { data, isLoading, error } = useExcelData() as { data: ExcelData | undefined; isLoading: boolean; error: Error | null };
   const { selectedProject, selectedPeriod } = useDashboardStore();
+  const { refreshData } = useRefreshExcelData();
 
   const periods = useMemo(() => {
-    const allPeriods = [...new Set(data?.data.map((r: ProjectRecordInterface) => r.period) || [])];
-    const validPeriods = allPeriods.filter(isValidPeriod);
-    return sortPeriodsSimple(validPeriods);
+    const allPeriods = [...new Set(data?.data?.map((r: ProjectRecordInterface) => r.period) || [])];
+    const validPeriods = allPeriods.filter((period: unknown) => typeof period === 'string' && isValidPeriod(period));
+    return sortPeriodsSimple(validPeriods as string[]);
   }, [data]);
 
   const lastPeriod = getLastPeriod(periods);
@@ -37,14 +42,14 @@ function AnalyticsPage() {
 
   // Статистика для графиков
   const stats = useMemo(() => {
-    const filteredData = data?.data.filter(record => {
+    const filteredData = data?.data?.filter((record: ProjectRecordInterface) => {
       const matchProject = selectedProject && selectedProject.trim() !== '' ? record.project === selectedProject : true;
       const matchPeriod = selectedPeriod && selectedPeriod.trim() !== '' ? record.period === selectedPeriod : true;
       return matchProject && matchPeriod;
     }) || [];
 
-    const totalViews = filteredData.reduce((sum, record) => sum + record.views, 0);
-    const totalSI = filteredData.reduce((sum, record) => sum + record.si, 0);
+    const totalViews = filteredData.reduce((sum: number, record: ProjectRecordInterface) => sum + record.views, 0);
+    const totalSI = filteredData.reduce((sum: number, record: ProjectRecordInterface) => sum + record.si, 0);
     const avgER = totalViews > 0 ? ((totalSI / totalViews) * 100).toFixed(1) : '0.0';
 
     return { totalViews, totalSI, avgER, recordCount: filteredData.length };
@@ -91,6 +96,12 @@ function AnalyticsPage() {
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Графики, тренды и прогнозы
           </p>
+          <button
+            onClick={refreshData}
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+          >
+            🔄 Обновить данные
+          </button>
         </div>
 
         {/* Статистика */}

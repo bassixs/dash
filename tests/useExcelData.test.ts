@@ -69,8 +69,11 @@ describe('useExcelData', () => {
     expect(useQuery).toHaveBeenCalledWith({
       queryKey: ['excelData'],
       queryFn: expect.any(Function),
-      staleTime: 1000 * 60 * 60 * 12,
+      staleTime: 1000 * 60 * 5,
+      cacheTime: 1000 * 60 * 10,
       retry: 2,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
     });
   });
 
