@@ -340,29 +340,29 @@ body {
 
 /* Адаптивные размеры для больших чисел */
 .stat-card .text-xl {
-  @apply text-xl leading-tight;
+  line-height: 1.25;
 }
 
 .stat-card .text-2xl {
-  @apply text-2xl leading-tight;
+  line-height: 1.25;
 }
 
 .stat-card .text-3xl {
-  @apply text-3xl leading-tight;
+  line-height: 1.25;
 }
 
 /* Мобильная адаптация для статистических карточек */
 @media (max-width: 768px) {
   .stat-card .text-xl {
-    @apply text-lg;
+    font-size: 1.125rem;
   }
   
   .stat-card .text-2xl {
-    @apply text-xl;
+    font-size: 1.25rem;
   }
   
   .stat-card .text-3xl {
-    @apply text-2xl;
+    font-size: 1.5rem;
   }
 }
 
