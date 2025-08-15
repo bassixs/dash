@@ -86,7 +86,7 @@ export default function ProgressBar({ current, target, label, period }: Progress
         </div>
       </div>
       
-      <div className="w-full bg-gray-200/50 dark:bg-gray-700/50 rounded-2xl h-6 overflow-hidden backdrop-blur-sm">
+      <div className="w-full bg-gray-200/50 dark:bg-gray-700/50 rounded-2xl h-6 overflow-hidden">
         <div 
           className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 h-6 rounded-2xl transition-all duration-300 flex items-center justify-center relative shadow-lg"
           style={{ 

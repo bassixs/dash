@@ -18,7 +18,7 @@ const navItems = [
 export default function Navbar(): React.JSX.Element {
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 backdrop-blur-xl bg-opacity-95 rounded-t-3xl shadow-2xl flex justify-around items-center h-[85px] max-w-[400px] mx-auto z-50 border-t border-white/20"
+      className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 rounded-t-3xl shadow-2xl flex justify-around items-center h-[85px] max-w-[400px] mx-auto z-50 border-t border-white/20"
       role="navigation"
       aria-label="Основная навигация"
     >
