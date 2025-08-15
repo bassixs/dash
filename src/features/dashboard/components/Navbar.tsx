@@ -18,7 +18,7 @@ const navItems = [
 export default function Navbar(): React.JSX.Element {
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 bg-blue-600 rounded-t-2xl shadow-lg flex justify-around items-center h-[78px] max-w-[400px] mx-auto z-50"
+      className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 backdrop-blur-xl bg-opacity-95 rounded-t-3xl shadow-2xl flex justify-around items-center h-[85px] max-w-[400px] mx-auto z-50 border-t border-white/20"
       role="navigation"
       aria-label="Основная навигация"
     >
@@ -27,17 +27,25 @@ export default function Navbar(): React.JSX.Element {
           key={item.path}
           to={item.path}
           className={({ isActive }) => 
-            `flex flex-col items-center p-2 text-white transition-colors duration-200 relative ${
-              isActive ? 'text-blue-200' : 'hover:text-blue-200'
+            `flex flex-col items-center p-3 text-white transition-all duration-300 relative group ${
+              isActive 
+                ? 'text-white scale-110' 
+                : 'text-white/80 hover:text-white hover:scale-105'
             }`
           }
           aria-label={item.label}
         >
-          <item.icon className="w-6 h-6" aria-hidden="true" />
-          <span className="text-xs">{item.label}</span>
+          <div className={`relative p-2 rounded-full transition-all duration-300 ${
+            'group-hover:bg-white/20 group-active:scale-95'
+          }`}>
+            <item.icon className="w-6 h-6" aria-hidden="true" />
+          </div>
+          <span className="text-xs font-medium mt-1 transition-all duration-300">{item.label}</span>
 
-          {/* Индикатор выбранного экрана */}
-          <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-white rounded-full transition-all duration-300 opacity-0 hover:opacity-100" />
+          {/* Улучшенный индикатор выбранного экрана */}
+          <div className={`absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-white rounded-full transition-all duration-500 ${
+            'opacity-0 group-hover:opacity-50'
+          }`} />
         </NavLink>
       ))}
     </nav>

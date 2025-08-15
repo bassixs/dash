@@ -156,42 +156,38 @@ export default function Dashboard() {
         <FiltersPanel />
         
         {/* Заголовок */}
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Аналитика спецпроектов</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+            Аналитика спецпроектов
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">
             {selectedPeriod || 'Все периоды'}
             {selectedProject && ` • ${selectedProject}`}
           </p>
         </div>
 
         {/* Основная статистика */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 mb-4">
-          <div className="grid grid-cols-2 gap-4">
-            <StatCard 
-              label="Просмотры" 
-              value={totalViews.toLocaleString()} 
-              onClick={() => handleStatCardClick('views')} 
-              className="bg-blue-50 dark:bg-blue-900/20 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30"
-            />
-            <StatCard 
-              label="Средний ЕР" 
-              value={`${avgER}%`} 
-              onClick={() => handleStatCardClick('er')} 
-              className="bg-green-50 dark:bg-green-900/20 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/30"
-            />
-            <StatCard 
-              label="СИ" 
-              value={totalSI.toLocaleString()} 
-              onClick={() => handleStatCardClick('si')} 
-              className="bg-purple-50 dark:bg-purple-900/20 cursor-pointer hover:bg-purple-100 dark:hover:bg-purple-900/30"
-            />
-            <StatCard 
-              label="Записей" 
-              value={totalLinks.toLocaleString()} 
-              onClick={() => handleStatCardClick('records')} 
-              className="bg-orange-50 dark:bg-orange-900/20 cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-900/30"
-            />
-          </div>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <StatCard 
+            label="Просмотры" 
+            value={totalViews.toLocaleString()} 
+            onClick={() => handleStatCardClick('views')} 
+          />
+          <StatCard 
+            label="Средний ЕР" 
+            value={`${avgER}%`} 
+            onClick={() => handleStatCardClick('er')} 
+          />
+          <StatCard 
+            label="СИ" 
+            value={totalSI.toLocaleString()} 
+            onClick={() => handleStatCardClick('si')} 
+          />
+          <StatCard 
+            label="Записей" 
+            value={totalLinks.toLocaleString()} 
+            onClick={() => handleStatCardClick('records')} 
+          />
         </div>
 
         {/* Прогресс бар для актуального периода */}
@@ -207,8 +203,8 @@ export default function Dashboard() {
         )}
 
         {/* Диаграмма распределения просмотров по проектам */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 mb-4">
-          <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Распределение просмотров по спецпроектам</h3>
+        <div className="modern-card p-6 mb-4">
+          <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Распределение просмотров по спецпроектам</h3>
           <div className="h-80">
             <Chart type="doughnut" data={projectsViewsChartData} options={doughnutOptions} />
           </div>

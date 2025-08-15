@@ -13,14 +13,14 @@ interface StatCardProps {
 export default function StatCard({ label, value, onClick, className = '' }: StatCardProps) {
   return (
     <div 
-      className={`stat-card card-hover ${className} ${onClick ? 'cursor-pointer' : ''}`}
+      className={`bg-gradient-to-br from-white/90 to-white/70 dark:from-gray-800/90 dark:to-gray-700/70 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl border border-white/20 dark:border-gray-600/20 p-6 transition-all duration-300 hover:-translate-y-1 ${onClick ? 'cursor-pointer active:scale-95' : ''} ${className}`}
       onClick={onClick}
     >
       <div className="text-center">
-        <p className="text-2xl font-bold text-gray-900 dark:text-white animate-fadeIn">
+        <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent animate-fadeIn">
           {value}
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 font-medium">
           {label}
         </p>
       </div>
