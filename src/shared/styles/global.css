@@ -338,6 +338,34 @@ body {
   @apply transform -translate-y-1 shadow-lg;
 }
 
+/* Адаптивные размеры для больших чисел */
+.stat-card .text-xl {
+  @apply text-xl leading-tight;
+}
+
+.stat-card .text-2xl {
+  @apply text-2xl leading-tight;
+}
+
+.stat-card .text-3xl {
+  @apply text-3xl leading-tight;
+}
+
+/* Мобильная адаптация для статистических карточек */
+@media (max-width: 768px) {
+  .stat-card .text-xl {
+    @apply text-lg;
+  }
+  
+  .stat-card .text-2xl {
+    @apply text-xl;
+  }
+  
+  .stat-card .text-3xl {
+    @apply text-2xl;
+  }
+}
+
 /* Улучшенные иконки */
 .icon {
   @apply transition-all duration-200;

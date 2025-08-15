@@ -167,7 +167,7 @@ export default function Dashboard() {
         </div>
 
         {/* Основная статистика */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-2 gap-3 mb-6">
           <StatCard 
             label="Просмотры" 
             value={totalViews.toLocaleString()} 
