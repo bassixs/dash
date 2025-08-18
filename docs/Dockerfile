@@ -4,12 +4,18 @@ FROM node:18-alpine AS builder
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
+# Настройки npm для стабильности сети
+RUN npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm config set fetch-retries 5 && \
+    npm config set registry https://registry.npmjs.org/
+
 # Копируем файлы конфигурации
 COPY package*.json ./
 COPY .npmrc ./
 
-# Устанавливаем зависимости с оптимизированными настройками
-RUN npm ci --only=production --no-audit --no-fund --prefer-offline
+# Устанавливаем все зависимости (включая dev для сборки)
+RUN npm ci --no-audit --no-fund --prefer-offline --network-timeout=300000
 
 # Копируем исходный код
 COPY . .
