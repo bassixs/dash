@@ -85,6 +85,29 @@ export async function parseExcelFromPublic(
         const trimmedPeriod = period.trim();
         periodsInSheet.push(trimmedPeriod);
 
+        // Дополнительная проверка и валидация данных
+        const viewsNum = Number.isFinite(Number(views)) ? Number(views) : 0;
+        const siNum = Number.isFinite(Number(si)) ? Number(si) : 0;
+        const erNum = Number.isFinite(Number(er)) ? Number(er) : 0;
+        
+        // Отладочная информация для всех записей с проблемами
+        if (isNaN(viewsNum) || isNaN(siNum) || isNaN(erNum) || 
+            !isFinite(viewsNum) || !isFinite(siNum) || !isFinite(erNum)) {
+          console.warn(`Row ${rowIndex + 1} - Invalid data:`, {
+            period: trimmedPeriod,
+            link,
+            views,
+            si,
+            er,
+            viewsNum,
+            siNum,
+            erNum,
+            viewsType: typeof views,
+            siType: typeof si,
+            erType: typeof er
+          });
+        }
+        
         // Отладочная информация для первых 5 записей
         if (rowIndex < 5) {
           console.log(`Row ${rowIndex + 1} debug:`, {
@@ -93,17 +116,24 @@ export async function parseExcelFromPublic(
             views,
             si,
             er,
+            viewsNum,
+            siNum,
+            erNum,
             erType: typeof er,
-            erNumber: Number(er),
             isFinite: Number.isFinite(Number(er))
           });
         }
 
+        // Проверяем, что значения корректные
+        if (viewsNum < 0 || siNum < 0 || erNum < 0) {
+          console.warn(`Row ${rowIndex + 1}: Negative values detected:`, { views: viewsNum, si: siNum, er: erNum });
+        }
+
         const record = new ProjectRecord({
           link: typeof link === 'string' ? link : '',
-          views: Number.isFinite(Number(views)) ? Number(views) : 0,
-          si: Number.isFinite(Number(si)) ? Number(si) : 0,
-          er: Number.isFinite(Number(er)) ? Number(er) : 0,
+          views: viewsNum,
+          si: siNum,
+          er: erNum,
           project: sheet.name,
           period: trimmedPeriod,
         });
@@ -125,12 +155,25 @@ export async function parseExcelFromPublic(
       }
     });
 
+    // Проверяем все записи на корректность данных
+    const invalidRecords = allRecords.filter(r => 
+      isNaN(r.views) || isNaN(r.si) || isNaN(r.er) || 
+      !isFinite(r.views) || !isFinite(r.si) || !isFinite(r.er) ||
+      r.views < 0 || r.si < 0 || r.er < 0
+    );
+    
+    if (invalidRecords.length > 0) {
+      console.warn('Found invalid records:', invalidRecords.slice(0, 5));
+    }
+
     console.log('Final Excel parsing summary:', { 
       totalRecords: allRecords.length, 
       projects: projects.length,
       allPeriods: [...new Set(allRecords.map(r => r.period))],
       recordsWithPeriods: allRecords.filter(r => r.period).length,
-      recordsWithoutPeriods: allRecords.filter(r => !r.period).length
+      recordsWithoutPeriods: allRecords.filter(r => !r.period).length,
+      invalidRecords: invalidRecords.length,
+      validRecords: allRecords.length - invalidRecords.length
     });
 
     return { data: allRecords, projects };

@@ -12,7 +12,7 @@ interface ExcelData {
  * @returns Результат запроса с данными и проектами
  */
 export function useExcelData() {
-  return useQuery<ExcelData, Error>({
+  const result = useQuery<ExcelData, Error>({
     queryKey: ['excelData'],
     queryFn: () => parseExcelFromPublic('/спецпроекты.xlsx'),
     staleTime: 1000 * 60 * 5, // 5 минут вместо 12 часов
@@ -21,6 +21,26 @@ export function useExcelData() {
     refetchOnWindowFocus: true, // Обновлять при фокусе окна
     refetchOnMount: true, // Обновлять при монтировании
   });
+
+  // Отладочная информация
+  if (result.data) {
+    console.log('useExcelData Debug:', {
+      dataLength: result.data.data.length,
+      projects: result.data.projects,
+      sampleData: result.data.data.slice(0, 3).map(r => ({
+        project: r.project,
+        period: r.period,
+        views: r.views,
+        si: r.si,
+        er: r.er,
+        viewsType: typeof r.views,
+        siType: typeof r.si,
+        erType: typeof r.er
+      }))
+    });
+  }
+
+  return result;
 }
 
 /**

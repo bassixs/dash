@@ -11,6 +11,23 @@ interface StatCardProps {
  * Компонент для отображения статистической карточки
  */
 export default function StatCard({ label, value, onClick, className = '' }: StatCardProps) {
+  // Защита от NaN и невалидных значений
+  const safeValue = (() => {
+    // Убираем % для проверки числа
+    const numericValue = value.replace('%', '');
+    
+    // Убираем пробелы из числа (форматированные числа)
+    const cleanNumericValue = numericValue.replace(/\s/g, '');
+    
+    if (value === 'NaN%' || value === 'NaN' || 
+        isNaN(Number(cleanNumericValue)) || 
+        !isFinite(Number(cleanNumericValue))) {
+      console.warn('StatCard: Invalid value detected:', value);
+      return '0.0%';
+    }
+    return value;
+  })();
+
   // Определяем размер шрифта в зависимости от длины числа
   const getFontSize = (value: string) => {
     const numericValue = value.replace(/[^\d]/g, ''); // Убираем все кроме цифр
@@ -22,7 +39,7 @@ export default function StatCard({ label, value, onClick, className = '' }: Stat
     return 'text-3xl'; // Для остальных
   };
 
-  const fontSize = getFontSize(value);
+  const fontSize = getFontSize(safeValue);
 
   return (
     <div 
@@ -31,7 +48,7 @@ export default function StatCard({ label, value, onClick, className = '' }: Stat
     >
       <div className="text-center">
         <p className={`${fontSize} font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent animate-fadeIn leading-tight`}>
-          {value}
+          {safeValue}
         </p>
         <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 font-medium">
           {label}

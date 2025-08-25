@@ -19,6 +19,10 @@ import Chart from './components/Chart';
 export default function Dashboard() {
   const { data, isLoading, error } = useExcelData();
   const { selectedProject, selectedPeriod, setSelectedPeriod } = useDashboardStore();
+  
+  // Явно типизируем данные
+  const excelData: ProjectRecordInterface[] = (data as any)?.data || [];
+  const projects: string[] = (data as any)?.projects || [];
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     type: 'views' | 'er' | 'si' | 'records' | null;
@@ -29,8 +33,8 @@ export default function Dashboard() {
 
   // Автоматически устанавливаем последний период при загрузке данных только один раз
   useEffect(() => {
-    if (data?.data && !selectedPeriod && !periodInitialized) {
-      const periods = [...new Set(data.data.map(record => record.period))];
+    if (excelData.length > 0 && !selectedPeriod && !periodInitialized) {
+      const periods: string[] = [...new Set(excelData.map((record: ProjectRecordInterface) => record.period))];
       const sortedPeriods = sortPeriodsSimple(periods);
       const lastPeriod = getLastPeriod(sortedPeriods);
       
@@ -39,25 +43,87 @@ export default function Dashboard() {
         setPeriodInitialized(true);
       }
     }
-  }, [data, selectedPeriod, setSelectedPeriod, periodInitialized]);
+  }, [excelData, selectedPeriod, setSelectedPeriod, periodInitialized]);
 
   // Используем хук для фильтрации данных
-  const filteredData = useFilteredData(data?.data || []);
+  const filteredData = useFilteredData(excelData);
 
   // Данные для диаграммы распределения просмотров
-  const projectsViewsChartData = useProjectsChartData(data?.data || [], selectedPeriod, 'views');
+  const projectsViewsChartData = useProjectsChartData(excelData, selectedPeriod, 'views');
 
   // Улучшенный расчет статистики
   const { totalViews, totalSI, avgER, totalLinks } = useMemo(() => {
     const totalViews = filteredData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.views, 0);
     const totalSI = filteredData.reduce((sum: number, r: ProjectRecordInterface) => sum + r.si, 0);
     
+    // Отладочная информация для диагностики NaN
+    console.log('ER Debug - Filtered Data:', {
+      filteredLength: filteredData.length,
+      totalViews,
+      totalSI,
+      sampleRecords: filteredData.slice(0, 3).map(r => ({
+        project: r.project,
+        period: r.period,
+        views: r.views,
+        si: r.si,
+        er: r.er,
+        viewsType: typeof r.views,
+        siType: typeof r.si,
+        erType: typeof r.er,
+        viewsIsNaN: isNaN(r.views),
+        siIsNaN: isNaN(r.si),
+        erIsNaN: isNaN(r.er),
+        viewsIsFinite: isFinite(r.views),
+        siIsFinite: isFinite(r.si),
+        erIsFinite: isFinite(r.er)
+      }))
+    });
+    
     // Исправленный расчет ЕР - используем формулу СИ/просмотры * 100
-    const avgER = filteredData.length
-      ? (filteredData.reduce((sum: number, r: ProjectRecordInterface) => sum + (r.si / r.views) * 100, 0) / filteredData.length).toFixed(1)
-      : '0.0';
+    let avgER = '0.0';
+    
+    if (filteredData.length > 0) {
+      // Проверяем, что totalViews > 0, чтобы избежать деления на ноль
+      if (totalViews > 0) {
+        const erSum = filteredData.reduce((sum: number, r: ProjectRecordInterface) => {
+          // Защита от деления на ноль для каждой записи
+          if (r.views > 0 && typeof r.views === 'number' && typeof r.si === 'number') {
+            const erValue = (r.si / r.views) * 100;
+            // Проверяем, что результат валидный
+            if (isFinite(erValue) && !isNaN(erValue)) {
+              return sum + erValue;
+            }
+          }
+          return sum;
+        }, 0);
+        
+        const finalER = erSum / filteredData.length;
+        // Финальная проверка результата
+        if (isFinite(finalER) && !isNaN(finalER)) {
+          avgER = finalER.toFixed(1);
+        } else {
+          console.warn('ER Debug - Invalid final ER calculation:', finalER);
+          avgER = '0.0';
+        }
+      } else {
+        console.warn('ER Debug - Total views is 0, cannot calculate ER');
+        avgER = '0.0';
+      }
+    }
     
     const totalLinks = filteredData.length;
+
+    console.log('ER Debug - Final calculation:', {
+      avgER,
+      avgERType: typeof avgER,
+      isNaN: isNaN(Number(avgER)),
+      isFinite: isFinite(Number(avgER)),
+      numericValue: Number(avgER),
+      totalViews,
+      totalSI,
+      filteredLength: filteredData.length,
+      calculationMethod: totalViews > 0 ? 'views > 0' : 'views = 0'
+    });
 
     return { totalViews, totalSI, avgER, totalLinks };
   }, [filteredData]);
@@ -92,18 +158,18 @@ export default function Dashboard() {
 
   // Рассчитываем прогресс для последнего периода
   const progressData = useMemo(() => {
-    if (!data?.data) return null;
+    if (excelData.length === 0) return null;
     
     // Получаем все периоды и находим последний
-    const periods = [...new Set(data.data.map(record => record.period))];
+    const periods: string[] = [...new Set(excelData.map((record: ProjectRecordInterface) => record.period))];
     const sortedPeriods = sortPeriodsSimple(periods);
     const lastPeriod = getLastPeriod(sortedPeriods);
     
     if (!lastPeriod) return null;
     
     // Фильтруем данные по последнему периоду
-    const lastPeriodData = data.data.filter(record => record.period === lastPeriod) || [];
-    const totalViews = lastPeriodData.reduce((sum, record) => sum + record.views, 0);
+    const lastPeriodData = excelData.filter((record: ProjectRecordInterface) => record.period === lastPeriod) || [];
+    const totalViews = lastPeriodData.reduce((sum: number, record: ProjectRecordInterface) => sum + record.views, 0);
     const target = 2000000; // 2 миллиона просмотров
     
     return {
@@ -111,7 +177,7 @@ export default function Dashboard() {
       target,
       period: lastPeriod
     };
-  }, [data]);
+  }, [excelData]);
 
   // Настройки для doughnut диаграммы
   const doughnutOptions: ChartOptions<'doughnut'> = {
@@ -175,7 +241,7 @@ export default function Dashboard() {
           />
           <StatCard 
             label="Средний ЕР" 
-            value={`${avgER}%`} 
+            value={avgER === 'NaN' || isNaN(Number(avgER)) ? '0.0%' : `${avgER}%`} 
             onClick={() => handleStatCardClick('er')} 
           />
           <StatCard 
